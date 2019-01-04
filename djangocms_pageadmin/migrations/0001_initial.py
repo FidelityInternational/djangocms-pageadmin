@@ -9,19 +9,13 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        ('cms', '0034_remove_pagecontent_placeholders'),
-    ]
+    dependencies = [("cms", "0034_remove_pagecontent_placeholders")]
 
     operations = [
         migrations.CreateModel(
-            name='PageContent',
-            fields=[
-            ],
-            options={
-                'proxy': True,
-                'indexes': [],
-            },
-            bases=('cms.pagecontent',),
-        ),
+            name="PageContent",
+            fields=[],
+            options={"proxy": True, "indexes": []},
+            bases=("cms.pagecontent",),
+        )
     ]

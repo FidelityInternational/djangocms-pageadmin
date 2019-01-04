@@ -4,7 +4,11 @@
 {% if disabled %}
     class="btn cms-page-admin-action-btn inactive"
 {% else %}
-    class="btn cms-form-get-method cms-page-admin-action-btn{% if action|default_if_none:True %} js-page-admin-action{% endif %} js-page-admin-keep-sideframe"
+    class="btn
+    cms-page-admin-action-btn
+    {% if get|default_if_none:True %} cms-form-get-method {% endif %}
+    {% if action|default_if_none:True %} js-page-admin-action{% endif %}
+    js-page-admin-keep-sideframe"
     href="{{ url }}"
 {% endif %}
 >
