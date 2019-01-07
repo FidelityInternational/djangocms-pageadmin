@@ -1,0 +1,4 @@
+{
+    "package-name": "djangocms-pageadmin",
+    "installed-apps": ["djangocms_pageadmin"]
+}
