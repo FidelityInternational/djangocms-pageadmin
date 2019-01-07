@@ -29,13 +29,6 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
     list_filter = (LanguageFilter,)
     search_fields = ("title",)
 
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .filter(page__node__site=get_current_site(request))
-        )
-
     def get_list_display(self, request):
         return [
             "title",
@@ -49,7 +42,11 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         original = self.model
         self.model = PageContent
-        queryset = super().get_queryset(request)
+        queryset = (
+            super()
+            .get_queryset(request)
+            .filter(page__node__site=get_current_site(request))
+        )
         self.model = original
         return queryset
 
