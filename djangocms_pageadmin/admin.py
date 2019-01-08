@@ -19,14 +19,14 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
-from .filters import LanguageFilter
+from .filters import LanguageFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import original_model, proxy_model
 from .models import PageContent as PageContentProxy
 
 
 class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
-    list_filter = (LanguageFilter,)
+    list_filter = (LanguageFilter, UnpublishedFilter)
     search_fields = ("title",)
 
     def get_list_display(self, request):
