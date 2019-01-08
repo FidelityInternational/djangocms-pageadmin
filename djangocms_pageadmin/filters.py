@@ -40,9 +40,7 @@ class UnpublishedFilter(admin.SimpleListFilter):
     parameter_name = "unpublished"
 
     def lookups(self, request, model_admin):
-        return (
-            ("1", _("Show")),
-        )
+        return (("1", _("Show")),)
 
     def queryset(self, request, queryset):
         show = self.value()
