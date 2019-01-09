@@ -5,7 +5,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import format_html_join
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import ugettext_lazy as _
 
 from cms import api
@@ -21,17 +21,19 @@ from djangocms_versioning.models import Version
 
 from .filters import LanguageFilter, UnpublishedFilter
 from .forms import DuplicateForm
-from .helpers import original_model, proxy_model
+from .helpers import proxy_model
 from .models import PageContent as PageContentProxy
 
 
 class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
+    list_display_links = None
     list_filter = (LanguageFilter, UnpublishedFilter)
     search_fields = ("title",)
 
     def get_list_display(self, request):
         return [
             "title",
+            "url",
             "author",
             "locked",
             "state",
@@ -48,10 +50,10 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
             .filter(page__node__site=get_current_site(request))
         )
         self.model = original
-        return queryset
+        return queryset.prefetch_related('versions')
 
     def get_version(self, obj):
-        return Version.objects.get_for_content(original_model(obj))
+        return Version.objects.get_for_content(obj)
 
     def state(self, obj):
         version = self.get_version(obj)
@@ -59,11 +61,20 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
 
     state.short_description = _("state")
 
+    def url(self, obj):
+        path = obj.page.get_path(obj.language)
+        if path is not None:
+            url = obj.page.get_absolute_url(obj.language)
+            return format_html('<a href="{url}">{url}</a>', url=url)
+
+    url.short_description = _("url")
+
     def author(self, obj):
         version = self.get_version(obj)
         return version.created_by
 
     author.short_description = _("author")
+    author.admin_order_field = 'versions__author'
 
     def lock(self, obj):
         version = self.get_version(obj)
@@ -84,6 +95,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         return version.modified
 
     modified_date.short_description = _("modified date")
+    modified_date.admin_order_field = 'versions__modified'
 
     def get_list_actions(self):
         return [
@@ -127,7 +139,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
     def _get_duplicate_link(self, obj, request, disabled=False):
         url = reverse(
             "admin:{app}_{model}_duplicate".format(
-                app=obj._meta.app_label, model=obj._meta.model_name
+                app=self.model._meta.app_label, model=self.model._meta.model_name
             ),
             args=(obj.pk,),
         )
@@ -162,7 +174,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         )
 
     def _get_manage_versions_link(self, obj, request, disabled=False):
-        url = version_list_url(original_model(obj))
+        url = version_list_url(obj)
         return render_to_string(
             "djangocms_pageadmin/admin/icons/manage_versions.html",
             {"url": url, "disabled": disabled, "action": False},
