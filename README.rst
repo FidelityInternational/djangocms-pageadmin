@@ -19,6 +19,8 @@ Run::
     pip install djangocms-pageadmin
 
 Add ``djangocms_pageadmin`` to your project's ``INSTALLED_APPS``.
+It should appear **after** ``cms`` app in order to override the
+default PageContent admin class.
 
 Run::
 

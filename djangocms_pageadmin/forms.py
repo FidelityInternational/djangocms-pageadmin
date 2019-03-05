@@ -41,7 +41,7 @@ class DuplicateForm(forms.Form):
         slug = cleaned_data["slug"]
         if self.page_content.page.node.parent:
             parent_path = self.page_content.page.node.parent.item.get_path(language)
-            path = u"%s/%s" % (parent_path, slug) if parent_path else slug
+            path = "%s/%s" % (parent_path, slug) if parent_path else slug
         else:
             path = cleaned_data["slug"]
 
