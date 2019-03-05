@@ -1,4 +1,2 @@
 factory_boy
-beautifulsoup4
-lxml
 djangocms-text-ckeditor
