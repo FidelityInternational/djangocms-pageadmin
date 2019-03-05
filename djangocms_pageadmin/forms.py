@@ -1,15 +1,15 @@
 from django import forms
+from django.contrib.sites.models import Site
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
-from cms.forms.utils import get_sites
 from cms.forms.validators import validate_url_uniqueness
 
 
 class DuplicateForm(forms.Form):
     site = forms.ModelChoiceField(
         label=_("Site"),
-        queryset=get_sites(),
+        queryset=Site.objects.all(),
         help_text=_("Site in which the new page will be created"),
     )
     slug = forms.CharField(
@@ -26,19 +26,20 @@ class DuplicateForm(forms.Form):
 
     def clean_slug(self):
         slug = slugify(self.cleaned_data["slug"])
-
         if not slug:
             raise forms.ValidationError(_("Slug must not be empty."))
-
         return slug
 
     def clean(self):
         cleaned_data = super().clean()
 
+        if self.errors:
+            return cleaned_data
+
         language = self.page_content.language
 
+        slug = cleaned_data["slug"]
         if self.page_content.page.node.parent:
-            slug = cleaned_data["slug"]
             parent_path = self.page_content.page.node.parent.item.get_path(language)
             path = u"%s/%s" % (parent_path, slug) if parent_path else slug
         else:
