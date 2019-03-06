@@ -9,8 +9,9 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import ugettext_lazy as _
 
 from cms import api
-from cms.models import PageContent
+from cms.admin.pageadmin import PageContentAdmin as DefaultPageContentAdmin
 from cms.extensions import extension_pool
+from cms.models import PageContent
 from cms.toolbar.utils import get_object_preview_url
 
 from djangocms_version_locking.helpers import version_is_locked
@@ -22,10 +23,10 @@ from djangocms_versioning.models import Version
 from .filters import LanguageFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
-from .models import PageContent as PageContentProxy
 
 
-class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
+class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
+    change_list_template = "admin/change_list.html"
     list_display_links = None
     list_filter = (LanguageFilter, UnpublishedFilter)
     search_fields = ("title",)
@@ -42,15 +43,12 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         ]
 
     def get_queryset(self, request):
-        original = self.model
-        self.model = PageContent
         queryset = (
             super()
             .get_queryset(request)
             .filter(page__node__site=get_current_site(request))
         )
-        self.model = original
-        return queryset.prefetch_related('versions')
+        return queryset.prefetch_related("versions")
 
     def get_version(self, obj):
         return Version.objects.get_for_content(obj)
@@ -74,7 +72,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         return version.created_by
 
     author.short_description = _("author")
-    author.admin_order_field = 'versions__author'
+    author.admin_order_field = "versions__author"
 
     def lock(self, obj):
         version = self.get_version(obj)
@@ -95,7 +93,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         return version.modified
 
     modified_date.short_description = _("modified date")
-    modified_date.admin_order_field = 'versions__modified'
+    modified_date.admin_order_field = "versions__modified"
 
     def get_list_actions(self):
         return [
@@ -138,7 +136,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
 
     def _get_duplicate_link(self, obj, request, disabled=False):
         url = reverse(
-            "admin:{app}_{model}_duplicate".format(
+            "admin:{app}_{model}_duplicate_content".format(
                 app=self.model._meta.app_label, model=self.model._meta.model_name
             ),
             args=(obj.pk,),
@@ -207,11 +205,8 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         list_actions.short_description = _("actions")
         return list_actions
 
-    def add_view(self, request, menu_content_id=None, form_url="", extra_context=None):
-        return redirect(reverse("admin:cms_pagecontent_add"))
-
-    def change_view(self, request, object_id, form_url="", extra_context=None):
-        return redirect(reverse("admin:cms_pagecontent_change", args=(object_id,)))
+    def changelist_view(self, request, extra_context=None):
+        return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
     def duplicate_view(self, request, object_id):
         obj = self.get_object(request, unquote(object_id))
@@ -272,7 +267,7 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
             form=form,
             object_id=object_id,
             duplicate_url=reverse(
-                "admin:{}_{}_duplicate".format(*info), args=(obj.pk,)
+                "admin:{}_{}_duplicate_content".format(*info), args=(obj.pk,)
             ),
             back_url=reverse("admin:{}_{}_changelist".format(*info)),
         )
@@ -284,9 +279,9 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
             url(
-                r"^(.+)/duplicate/$",
+                r"^(.+)/duplicate-content/$",
                 self.admin_site.admin_view(self.duplicate_view),
-                name="{}_{}_duplicate".format(*info),
+                name="{}_{}_duplicate_content".format(*info),
             )
         ] + super().get_urls()
 
@@ -295,4 +290,5 @@ class PageContentAdmin(VersioningAdminMixin, admin.ModelAdmin):
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
 
 
-admin.site.register(PageContentProxy, PageContentAdmin)
+admin.site.unregister(PageContent)
+admin.site.register(PageContent, PageContentAdmin)
