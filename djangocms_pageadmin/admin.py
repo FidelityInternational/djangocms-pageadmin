@@ -43,6 +43,8 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         ]
 
     def get_queryset(self, request):
+        """Filter PageContent objects by current site of the request.
+        """
         queryset = (
             super()
             .get_queryset(request)
@@ -193,6 +195,10 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         )
 
     def _list_actions(self, request):
+        """A closure that makes it possible to pass request object to
+        list action button functions.
+        """
+
         def list_actions(obj):
             """Display links to state change endpoints
             """
@@ -206,9 +212,18 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return list_actions
 
     def changelist_view(self, request, extra_context=None):
+        """Ignore default cms' implementation and use ModelAdmin instead.
+        """
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
     def duplicate_view(self, request, object_id):
+        """Duplicate a specified PageContent.
+
+        Create a new page with content copied from provided PageContent.
+
+        :param request: Http request
+        :param object_id: PageContent ID (as a string)
+        """
         obj = self.get_object(request, unquote(object_id))
         if obj is None:
             return self._get_obj_does_not_exist_redirect(
