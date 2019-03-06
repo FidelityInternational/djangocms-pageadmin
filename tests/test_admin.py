@@ -326,7 +326,10 @@ class DuplicateViewTestCase(CMSTestCase):
 
     def test_post_with_parent(self):
         pagecontent1 = PageContentWithVersionFactory(
-            template="page.html", page__node__depth=0, page__node__path="0001", page__node__numchild=1,
+            template="page.html",
+            page__node__depth=0,
+            page__node__path="0001",
+            page__node__numchild=1,
         )
         PageUrl.objects.create(
             slug="foo",
@@ -363,6 +366,7 @@ class DuplicateViewTestCase(CMSTestCase):
         self.assertEqual(len(new_plugins), 1)
         self.assertEqual(new_plugins[0].plugin_type, "TextPlugin")
         self.assertEqual(new_plugins[0].body, "Test text")
+
 
 class RegistrationTestCase(TestCase):
     def test_admin_is_registered(self):

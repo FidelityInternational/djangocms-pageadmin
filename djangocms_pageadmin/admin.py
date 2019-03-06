@@ -15,7 +15,7 @@ from cms.models import PageContent
 from cms.toolbar.utils import get_object_preview_url
 
 from djangocms_version_locking.helpers import version_is_locked
-from djangocms_versioning.admin import VersionAdmin, VersioningAdminMixin
+from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
