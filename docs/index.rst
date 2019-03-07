@@ -17,6 +17,10 @@ Django CMS Page Admin provides a new PageContent admin which doesn't
 include tree functionality. It also displays data from Django CMS Versioning
 and Django CMS Version Locking.
 
+Page Admin merely replaces the changelist of PageContent admin
+(to use a standard Django admin one), so the rest of functionality
+is kept as-is.
+
 Installation
 ------------
 
@@ -41,8 +45,8 @@ default PageContent admin class.
 Usage
 -----
 
-Django CMS Page Admin replaces the default PageContent admin
-provided by the CMS.
+Django CMS Page Admin is a drop-in replacement for the default
+PageContent admin provided by the CMS.
 
 Indices and tables
 ==================
