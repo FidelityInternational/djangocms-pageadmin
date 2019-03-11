@@ -75,19 +75,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     author.short_description = _("author")
     author.admin_order_field = "versions__author"
 
-    # def lock(self, obj):
-    #     version = self.get_version(obj)
-    #     return getattr(version, "versionlock", False)
-
-    # lock.short_description = _("lock")
-
     def locked(self, obj):
         version = self.get_version(obj)
         if version.state == DRAFT and version_is_locked(version):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
         return ""
-
-    # locked.short_description = _("locked")
 
     def modified_date(self, obj):
         version = self.get_version(obj)
@@ -287,7 +279,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         ] + super().get_urls()
 
     class Media:
-        js = ("djangocms_pageadmin/js/actions.js",)
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
 
 

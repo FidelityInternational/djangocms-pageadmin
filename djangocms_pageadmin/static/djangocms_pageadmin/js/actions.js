@@ -17,7 +17,7 @@
             anchor.setAttributeNode(title);
             var icon = document.createElement('IMG');
             var src = document.createAttribute('src');
-            src.value = '/static/djangocms_pageadmin/svg/menu.svg'
+            src.value = '/static/djangocms_pageadmin/svg/menu.svg';
             icon.setAttributeNode(src);
             anchor.appendChild(icon);
             
