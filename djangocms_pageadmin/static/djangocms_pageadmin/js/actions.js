@@ -7,23 +7,19 @@
 
         var createBurgerMenu = function(row) {
 
-            // create burger container
-            var container = document.createElement('DIV');
-            var cssclass = document.createAttribute('class');
-            cssclass.value = '';
-            container.setAttributeNode(cssclass);
-
             // create anchor icon
             var anchor = document.createElement('A');
             var cssclass = document.createAttribute('class');
-            cssclass.value = 'btn cms-icon-menu cms-page-admin-action-btn ' +
-                'cms-btn cms-btn-default ' +
-                'cms-btn-no-border cms-icon cms-icon-menu closed';
+            cssclass.value = 'btn cms-page-admin-action-btn closed';
             anchor.setAttributeNode(cssclass);
             var title = document.createAttribute('title');
             title.value = 'Actions';
             anchor.setAttributeNode(title);
-            container.appendChild(anchor);
+            var icon = document.createElement('IMG');
+            var src = document.createAttribute('src');
+            src.value = '/static/djangocms_pageadmin/svg/menu.svg'
+            icon.setAttributeNode(src);
+            anchor.appendChild(icon);
             
             // create options container
             var optionsContainer = document.createElement('DIV');
@@ -49,6 +45,8 @@
                 return;
             }
             $(actions[0]).children('.cms-page-admin-action-btn').each( function (index, item) {
+                // exclude some buttons
+                if (item.title == "Preview" || item.title == "Edit") { return; }
                 li = document.createElement('LI');
                 text = document.createTextNode(item.title);
                 li.appendChild(item);
@@ -56,7 +54,7 @@
                 ul.appendChild(li);
             })
             optionsContainer.appendChild(ul);
-            actions[0].appendChild(container);
+            actions[0].appendChild(anchor);
             document.body.appendChild(optionsContainer);
 
             anchor.addEventListener('click', function (ev){

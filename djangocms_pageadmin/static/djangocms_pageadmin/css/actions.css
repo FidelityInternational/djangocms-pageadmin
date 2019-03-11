@@ -4,7 +4,7 @@
     display: -webkit-inline-box;
     display: -ms-inline-flexbox;
     display: inline-flex;
-    padding: 0 10px !important;
+    padding: 0 4px 0 7px !important;
     -webkit-box-align: center;
         -ms-flex-align: center;
             align-items: center;
@@ -97,14 +97,19 @@ a.btn.cms-page-admin-action-btn.inactive {
     display: block;
     width: 200px;
 }
-.cms-icon-menu.closed:before {
-    font-family: 'django-cms-iconfont';
-    content: "\E015";
-}
 
+.field-title {
+    min-width: 300px;
+    word-break: break-word;
+    white-space: normal !important;
+}
 .field-url {
     min-width: 100px;
     word-break: break-all;
     white-space: normal !important;
 }
 
+.cms-version-locked-status-icon img{
+    width: 10px;
+    height: 10px;
+}

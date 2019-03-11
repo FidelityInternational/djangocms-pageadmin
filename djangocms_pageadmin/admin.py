@@ -36,7 +36,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             "title",
             "url",
             "author",
-            "locked",
             "state",
             "modified_date",
             self._list_actions(request),
@@ -63,7 +62,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         path = obj.page.get_path(obj.language)
         if path is not None:
             url = obj.page.get_absolute_url(obj.language)
-            return format_html('<a href="{url}">{url}</a>', url=url)
+            formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
+            lock = self.locked(obj)
+            return lock + formatted_url
 
     url.short_description = _("url")
 
@@ -74,11 +75,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     author.short_description = _("author")
     author.admin_order_field = "versions__author"
 
-    def lock(self, obj):
-        version = self.get_version(obj)
-        return getattr(version, "versionlock", False)
+    # def lock(self, obj):
+    #     version = self.get_version(obj)
+    #     return getattr(version, "versionlock", False)
 
-    lock.short_description = _("lock")
+    # lock.short_description = _("lock")
 
     def locked(self, obj):
         version = self.get_version(obj)
@@ -86,7 +87,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
         return ""
 
-    locked.short_description = _("locked")
+    # locked.short_description = _("locked")
 
     def modified_date(self, obj):
         version = self.get_version(obj)
