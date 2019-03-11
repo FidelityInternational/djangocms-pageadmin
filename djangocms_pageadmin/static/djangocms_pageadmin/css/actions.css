@@ -1,16 +1,16 @@
-a.btn.cms-page-admin-action-btn {
+
+.btn.cms-page-admin-action-btn {
     position: relative;
     display: -webkit-inline-box;
     display: -ms-inline-flexbox;
     display: inline-flex;
-    padding: 0 !important;
+    padding: 0 10px !important;
     -webkit-box-align: center;
         -ms-flex-align: center;
             align-items: center;
     -webkit-box-pack: center;
         -ms-flex-pack: center;
             justify-content: center;
-    width: 34px;
     height: 34px;
     margin-top: -12px !important;
     position: relative;
@@ -19,9 +19,55 @@ a.btn.cms-page-admin-action-btn {
     -webkit-box-sizing: border-box;
             box-sizing: border-box;
 }
+
+ul.cms-pagetree-dropdown-menu-inner li {
+
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif !important;
+    list-style-type: none;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 2px 6px;
+}
+
+ul.cms-pagetree-dropdown-menu-inner li:hover {
+    list-style-type: none;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #0bf;
+}
+
+ul.cms-pagetree-dropdown-menu-inner li:hover a.btn {
+    color: #fff !important;
+}
+
+ul.cms-pagetree-dropdown-menu-inner li:hover a.btn img {
+    color: #fff !important;
+}
+
+ul.cms-pagetree-dropdown-menu-inner li a.btn {
+    border: none !important;
+    background-color: transparent !important;
+}
+ul.cms-pagetree-dropdown-menu-inner li a.btn:hover {
+    background-color: transparent !important;
+}
+ul.cms-pagetree-dropdown-menu-inner li a.btn.inactive {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+a.btn.cms-page-admin-action-btn {
+    line-height: 15px !important;
+    vertical-align: 50%;
+}
+a.btn.cms-page-admin-action-btn:hover, a.btn.cms-page-admin-action-btn.open {
+    box-shadow: inset 0 3px 5px rgba(0,0,0,.125)!important;
+}
+
 a.btn.cms-page-admin-action-btn img {
     width: 20px;
     height: 20px;
+    margin-right: 4px;
 }
 
 a.btn.cms-page-admin-action-btn.inactive {
@@ -33,3 +79,26 @@ a.btn.cms-page-admin-action-btn.inactive {
     width: 20px;
     height: 20px;
 }
+
+.field-list_actions {
+    position: relative;
+}
+
+.cms-icon-menu {
+    cursor: pointer;
+}
+.cms-icon-menu.closed .cms-pagetree-dropdown-menu {
+    display: none;
+}
+.cms-pagetree-dropdown-menu.closed {
+    display: none;
+}
+.cms-pagetree-dropdown-menu.open {
+    display: block;
+    width: 200px;
+}
+.cms-icon-menu.closed:before {
+    font-family: 'django-cms-iconfont';
+    content: "\E015";
+}
+
