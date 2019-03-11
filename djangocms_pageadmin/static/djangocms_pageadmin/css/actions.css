@@ -102,3 +102,9 @@ a.btn.cms-page-admin-action-btn.inactive {
     content: "\E015";
 }
 
+.field-url {
+    min-width: 100px;
+    word-break: break-all;
+    white-space: normal !important;
+}
+
