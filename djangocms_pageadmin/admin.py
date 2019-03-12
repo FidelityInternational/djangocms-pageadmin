@@ -1,14 +1,15 @@
 from django.conf.urls import url
-from django.core.exceptions import PermissionDenied
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.html import format_html, format_html_join, force_text
+from django.utils.html import force_text, format_html, format_html_join
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
@@ -24,11 +25,11 @@ from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
 
 from .filters import LanguageFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
+
 
 require_POST = method_decorator(require_POST)
 

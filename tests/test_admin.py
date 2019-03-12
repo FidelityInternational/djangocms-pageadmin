@@ -13,6 +13,8 @@ from cms.toolbar.utils import get_object_preview_url
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
+from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
+from djangocms_versioning.helpers import version_list_url
 
 from djangocms_pageadmin.admin import PageContentAdmin
 from djangocms_pageadmin.test_utils.factories import (
@@ -22,8 +24,6 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
-from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
-from djangocms_versioning.helpers import version_list_url
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
