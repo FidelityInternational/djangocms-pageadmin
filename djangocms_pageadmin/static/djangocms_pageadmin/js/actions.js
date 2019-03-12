@@ -7,7 +7,7 @@
 
   $(function () {
     var createBurgerMenu = function createBurgerMenu(row) {
-      // create anchor icon
+      /* create anchor icon */
       var anchor = document.createElement('A');
       var cssclass = document.createAttribute('class');
       cssclass.value = 'btn cms-page-admin-action-btn closed';
@@ -19,58 +19,65 @@
       var src = document.createAttribute('src');
       src.value = pageadmin_static_url_prefix + 'svg/menu.svg';
       icon.setAttributeNode(src);
-      anchor.appendChild(icon); // create options container
+      anchor.appendChild(icon); 
 
+      /* create options container */
       var optionsContainer = document.createElement('DIV');
       cssclass = document.createAttribute('class');
-      cssclass.value = // main selector for the menu
-      'cms-pagetree-dropdown-menu ' + // keeps the menu arrow in position
-      'cms-pagetree-dropdown-menu-arrow-right-top';
+      cssclass.value = 
+      'cms-pagetree-dropdown-menu ' + // main selector for the menu
+      'cms-pagetree-dropdown-menu-arrow-right-top'; // keeps the menu arrow in position
       optionsContainer.setAttributeNode(cssclass);
       var ul = document.createElement('UL');
       cssclass = document.createAttribute('class');
       cssclass.value = 'cms-pagetree-dropdown-menu-inner';
-      ul.setAttributeNode(cssclass); // get the existing actions and move them into the options container
-
+      ul.setAttributeNode(cssclass); 
+      
+      /* get the existing actions and move them into the options container */
       var li;
       var text;
       var actions = $(row).children('.field-list_actions');
 
       if (!actions.length) {
-        // skip any rows without actions to avoid errors
+        /* skip any rows without actions to avoid errors */
         return;
       }
 
       $(actions[0]).children('.cms-page-admin-action-btn').each(function (index, item) {
-        // exclude some buttons
+        /* exclude some buttons */
         if (item.title == "Preview" || item.title == "Edit") {
           return;
         }
 
-        li = document.createElement('LI'); // create an anchor from the item
+        li = document.createElement('LI'); 
 
+        /* create an anchor from the item */
         var li_anchor = document.createElement('A');
         cssclass = document.createAttribute('class');
         cssclass.value = 'cms-page-admin-action-burger-options-icon';
         li_anchor.setAttributeNode(cssclass);
         var href = document.createAttribute('href');
         href.value = $(item).attr('href');
-        li_anchor.setAttributeNode(href); // move the an image element
+        li_anchor.setAttributeNode(href); 
 
+        /* move the an image element */
         var existing_img = $(item).children('img');
-        li_anchor.appendChild(existing_img[0]); // create the button text
+        li_anchor.appendChild(existing_img[0]); 
 
+        /* create the button text */
         text = document.createTextNode(item.title);
         var span = document.createElement('SPAN');
         span.appendChild(text); // construct the button
 
         li.appendChild(li_anchor);
         li_anchor.appendChild(span);
-        ul.appendChild(li); // detroy original replaced buttons
+        ul.appendChild(li); 
 
+        /* destroy original replaced buttons */
         actions[0].removeChild(item);
-      }); // add the options to the drop-down
+      }); 
 
+      /* add the options to the drop-down */
       optionsContainer.appendChild(ul);
       actions[0].appendChild(anchor);
       document.body.appendChild(optionsContainer);
@@ -118,8 +125,11 @@
 
     $('#result_list').find('tr').each(function (index, item) {
       createBurgerMenu(item);
-    }); // it is not possible to put a form inside a form, so
-    // actions have to create their own form on click
+    }); 
+
+
+    /* it is not possible to put a form inside a form, so
+      actions have to create their own form on click */
 
     $('.js-page-admin-action, .cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn').on('click', function (e) {
       e.preventDefault();
