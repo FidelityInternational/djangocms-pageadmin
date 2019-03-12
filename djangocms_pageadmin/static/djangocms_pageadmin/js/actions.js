@@ -74,19 +74,23 @@
       optionsContainer.appendChild(ul);
       actions[0].appendChild(anchor);
       document.body.appendChild(optionsContainer);
+
+      /* listen for burger menu clicks */
       anchor.addEventListener('click', function (ev) {
+        ev.stopPropagation();
         toggleBurgerMenu(anchor, optionsContainer);
+      });
+      /* close burger menu if clicking outside */
+      $(window).click(function() {
+        closeBurgerMenu()
       });
     };
 
-    var toggleBurgerMenu = function toggleBurgerMenu(burgerMenuAnchor, optionsContainer) {
+    var toggleBurgerMenu = function (burgerMenuAnchor, optionsContainer) {
       var bm = $(burgerMenuAnchor);
       var op = $(optionsContainer);
       var closed = bm.hasClass('closed');
-      $('.cms-pagetree-dropdown-menu').removeClass('open');
-      $('.cms-pagetree-dropdown-menu').addClass('closed');
-      $('.cms-page-admin-action-btn').removeClass('open');
-      $('.cms-page-admin-action-btn').addClass('closed');
+      closeBurgerMenu();
 
       if (closed) {
         bm.removeClass('closed');
@@ -104,6 +108,13 @@
       op.css('left', pos.left - 200);
       op.css('top', pos.top);
     };
+
+    var closeBurgerMenu = function() {
+      $('.cms-pagetree-dropdown-menu').removeClass('open');
+      $('.cms-pagetree-dropdown-menu').addClass('closed');
+      $('.cms-page-admin-action-btn').removeClass('open');
+      $('.cms-page-admin-action-btn').addClass('closed');
+    }
 
     $('#result_list').find('tr').each(function (index, item) {
       createBurgerMenu(item);
