@@ -48,7 +48,6 @@
                 // exclude some buttons
                 if (item.title == "Preview" || item.title == "Edit") { return; }
                 li = document.createElement('LI');
-                text = document.createTextNode(item.title);
 
                 // create an anchor from the item
                 let li_anchor = document.createElement('A');
@@ -64,15 +63,21 @@
                 console.log(existing_img[0]);
                 li_anchor.appendChild(existing_img[0]);
 
-                // detroy old container
-                actions[0].removeChild(item)
-
+                // create the button text
+                text = document.createTextNode(item.title);
                 var span = document.createElement('SPAN');
                 span.appendChild(text);
+
+                // construct the button
                 li.appendChild(li_anchor);
                 li_anchor.appendChild(span);
                 ul.appendChild(li);
+
+                // detroy original replaced buttons
+                actions[0].removeChild(item)
             })
+
+            // add the options to the drop-down
             optionsContainer.appendChild(ul);
             actions[0].appendChild(anchor);
             document.body.appendChild(optionsContainer);
