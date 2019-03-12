@@ -26,7 +26,7 @@ from .helpers import proxy_model
 
 
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
-    change_list_template = "admin/change_list.html"
+    change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
     list_filter = (LanguageFilter, UnpublishedFilter)
     search_fields = ("title",)
@@ -36,7 +36,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             "title",
             "url",
             "author",
-            "locked",
             "state",
             "modified_date",
             self._list_actions(request),
@@ -65,7 +64,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         path = obj.page.get_path(obj.language)
         if path is not None:
             url = obj.page.get_absolute_url(obj.language)
-            return format_html('<a href="{url}">{url}</a>', url=url)
+            formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
+            lock = self.locked(obj)
+            return lock + formatted_url
 
     url.short_description = _("url")
 
@@ -76,19 +77,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     author.short_description = _("author")
     author.admin_order_field = "versions__author"
 
-    def lock(self, obj):
-        version = self.get_version(obj)
-        return getattr(version, "versionlock", False)
-
-    lock.short_description = _("lock")
-
     def locked(self, obj):
         version = self.get_version(obj)
         if version.state == DRAFT and version_is_locked(version):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
         return ""
-
-    locked.short_description = _("locked")
 
     def modified_date(self, obj):
         version = self.get_version(obj)
@@ -301,7 +294,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         ] + super().get_urls()
 
     class Media:
-        js = ("djangocms_pageadmin/js/actions.js",)
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
 
 
