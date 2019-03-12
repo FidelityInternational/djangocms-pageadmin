@@ -17,7 +17,7 @@
             anchor.setAttributeNode(title);
             var icon = document.createElement('IMG');
             var src = document.createAttribute('src');
-            src.value = '/static/djangocms_pageadmin/svg/menu.svg';
+            src.value = url + 'svg/menu.svg';
             icon.setAttributeNode(src);
             anchor.appendChild(icon);
             
@@ -49,8 +49,28 @@
                 if (item.title == "Preview" || item.title == "Edit") { return; }
                 li = document.createElement('LI');
                 text = document.createTextNode(item.title);
-                li.appendChild(item);
-                item.appendChild(text);
+
+                // create an anchor from the item
+                let li_anchor = document.createElement('A');
+                cssclass = document.createAttribute('class');
+                cssclass.value = 'cms-page-admin-action-burger-options-icon';
+                li_anchor.setAttributeNode(cssclass);
+                let href = document.createAttribute('href');
+                href.value = $(item).attr('href')
+                li_anchor.setAttributeNode(href);
+
+                // move the an image element
+                var existing_img = $(item).children('img');
+                console.log(existing_img[0]);
+                li_anchor.appendChild(existing_img[0]);
+
+                // detroy old container
+                actions[0].removeChild(item)
+
+                var span = document.createElement('SPAN');
+                span.appendChild(text);
+                li.appendChild(li_anchor);
+                li_anchor.appendChild(span);
                 ul.appendChild(li);
             })
             optionsContainer.appendChild(ul);

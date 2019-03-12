@@ -1,4 +1,30 @@
+/*-------------------------------------
+ General page admin styles
+---------------------------------------*/
 
+/* ensure certain columns aren't too wide */
+.field-title {
+    min-width: 300px;
+    word-break: break-word;
+    white-space: normal !important;
+}
+
+.field-url {
+    min-width: 100px;
+    word-break: break-all;
+    white-space: normal !important;
+}
+.cms-version-locked-status-icon img {
+    width: 10px;
+    height: 10px;
+}
+.cms-icon-menu {
+    cursor: pointer;
+}
+
+/*-------------------------------------
+ All action buttons
+---------------------------------------*/
 .btn.cms-page-admin-action-btn {
     position: relative;
     display: -webkit-inline-box;
@@ -20,15 +46,35 @@
             box-sizing: border-box;
 }
 
-ul.cms-pagetree-dropdown-menu-inner li {
+/* disable clicking for inactive buttons */
+.btn.cms-page-admin-action-btn.inactive {
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
-    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif !important;
-    list-style-type: none;
+/* set size and spacing between for the action icons */
+a.btn.cms-page-admin-action-btn img {
+    width: 20px;
+    height: 20px;
+    margin-right: 4px;
+}
+
+/*-------------------------------------
+This governs the drop-down behaviour 
+extending the pagetree classes provided by CMS
+---------------------------------------*/
+
+/* add shadow on burger menu trigger */
+a.btn.cms-page-admin-action-btn:hover, a.btn.cms-page-admin-action-btn.open {
+    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+}
+
+/* style for each option row */
+ul.cms-pagetree-dropdown-menu-inner li {
     border: 1px solid transparent;
     border-radius: 5px;
     padding: 2px 6px;
 }
-
 ul.cms-pagetree-dropdown-menu-inner li:hover {
     list-style-type: none;
     border: 1px solid #ccc;
@@ -36,80 +82,45 @@ ul.cms-pagetree-dropdown-menu-inner li:hover {
     background-color: #0bf;
 }
 
-ul.cms-pagetree-dropdown-menu-inner li:hover a.btn {
-    color: #fff !important;
-}
-
-ul.cms-pagetree-dropdown-menu-inner li:hover a.btn img {
-    color: #fff !important;
-}
-
-ul.cms-pagetree-dropdown-menu-inner li a.btn {
-    border: none !important;
-    background-color: transparent !important;
-}
-ul.cms-pagetree-dropdown-menu-inner li a.btn:hover {
-    background-color: transparent !important;
-}
-ul.cms-pagetree-dropdown-menu-inner li a.btn.inactive {
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-a.btn.cms-page-admin-action-btn {
-    line-height: 15px !important;
-    vertical-align: 50%;
-}
-a.btn.cms-page-admin-action-btn:hover, a.btn.cms-page-admin-action-btn.open {
-    box-shadow: inset 0 3px 5px rgba(0,0,0,.125)!important;
-}
-
-a.btn.cms-page-admin-action-btn img {
+/* set the size of the option icon */
+.cms-page-admin-action-burger-options-icon img{
     width: 20px;
     height: 20px;
-    margin-right: 4px;
 }
 
-a.btn.cms-page-admin-action-btn.inactive {
+/* align the option text with it's icon */
+ul.cms-pagetree-dropdown-menu-inner li a span {
+    line-height: 1rem;
+    vertical-align: 20%;
+    margin-left: 10px;
+}
+
+/* disable any inactive option */
+ul.cms-pagetree-dropdown-menu-inner li a.inactive {
+    cursor: not-allowed;
+    pointer-events: none;
     opacity: 0.3;
     filter: alpha(opacity=30);
 }
 
-.cms-version-locked-status-icon img {
-    width: 20px;
-    height: 20px;
-}
-
-.field-list_actions {
-    position: relative;
-}
-
-.cms-icon-menu {
-    cursor: pointer;
-}
-.cms-icon-menu.closed .cms-pagetree-dropdown-menu {
-    display: none;
-}
-.cms-pagetree-dropdown-menu.closed {
-    display: none;
-}
+/* set the size of the drop-down */
 .cms-pagetree-dropdown-menu.open {
     display: block;
     width: 200px;
 }
 
-.field-title {
-    min-width: 300px;
-    word-break: break-word;
-    white-space: normal !important;
-}
-.field-url {
-    min-width: 100px;
-    word-break: break-all;
-    white-space: normal !important;
+/* hide when closed */
+.cms-pagetree-dropdown-menu.closed, .cms-icon-menu.closed .cms-pagetree-dropdown-menu {
+    display: none;
 }
 
-.cms-version-locked-status-icon img{
-    width: 10px;
-    height: 10px;
-}
+
+
+
+
+
+
+
+
+
+
