@@ -187,15 +187,6 @@ class ListActionsTestCase(CMSTestCase):
             reverse("admin:cms_pagecontent_set_home_content", args=(version.pk,)),
         )
 
-    def test_version_set_home(self):
-        version = PageVersionFactory(state=PUBLISHED)
-        pagecontent = version.content
-        func = self.modeladmin._list_actions(self.get_request("/"))
-        response = func(pagecontent)
-        soup = parse_html(response)
-        element = soup.find("a", {"class": "cms-page-admin-action-set-home"})
-        self.assertEqual(element["title"], "Set as a home")
-
     def test_unpublish_link(self):
         version = PageVersionFactory(state=PUBLISHED)
         pagecontent = version.content
