@@ -94,8 +94,8 @@
             var closed = bm.hasClass('closed');
             $('.cms-pagetree-dropdown-menu').removeClass('open');
             $('.cms-pagetree-dropdown-menu').addClass('closed');
-            $('.cms-btn-no-border').removeClass('open');
-            $('.cms-btn-no-border').addClass('closed');
+            $('.cms-page-admin-action-btn').removeClass('open');
+            $('.cms-page-admin-action-btn').addClass('closed');
             if (closed) {
                 bm.removeClass('closed');
                 bm.addClass('open');
