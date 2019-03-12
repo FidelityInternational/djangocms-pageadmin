@@ -17,7 +17,7 @@
       anchor.setAttributeNode(title);
       var icon = document.createElement('IMG');
       var src = document.createAttribute('src');
-      src.value = pageadmin_staic_url_prefix + 'svg/menu.svg';
+      src.value = pageadmin_static_url_prefix + 'svg/menu.svg';
       icon.setAttributeNode(src);
       anchor.appendChild(icon); // create options container
 
@@ -58,7 +58,6 @@
         li_anchor.setAttributeNode(href); // move the an image element
 
         var existing_img = $(item).children('img');
-        console.log(existing_img[0]);
         li_anchor.appendChild(existing_img[0]); // create the button text
 
         text = document.createTextNode(item.title);
