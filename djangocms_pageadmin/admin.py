@@ -26,7 +26,7 @@ from .helpers import proxy_model
 
 
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
-    change_list_template = "admin/pageadmin_change_list.html"
+    change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
     list_filter = (LanguageFilter, UnpublishedFilter)
     search_fields = ("title",)
