@@ -17,7 +17,7 @@
       anchor.setAttributeNode(title);
       var icon = document.createElement('IMG');
       var src = document.createAttribute('src');
-      src.value = url + 'svg/menu.svg';
+      src.value = pageadmin_staic_url_prefix + 'svg/menu.svg';
       icon.setAttributeNode(src);
       anchor.appendChild(icon); // create options container
 
