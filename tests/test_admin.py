@@ -174,6 +174,28 @@ class ListActionsTestCase(CMSTestCase):
             reverse("admin:cms_pagecontent_duplicate_content", args=(version.pk,)),
         )
 
+    def test_set_home_link(self):
+        version = PageVersionFactory(state=PUBLISHED)
+        pagecontent = version.content
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        response = func(pagecontent)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-page-admin-action-set-home"})
+        self.assertEqual(element["title"], "Set as a home")
+        self.assertEqual(
+            element["href"],
+            reverse("admin:cms_pagecontent_set_home_content", args=(version.pk,)),
+        )
+
+    def test_version_set_home(self):
+        version = PageVersionFactory(state=PUBLISHED)
+        pagecontent = version.content
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        response = func(pagecontent)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-page-admin-action-set-home"})
+        self.assertEqual(element["title"], "Set as a home")
+
     def test_unpublish_link(self):
         version = PageVersionFactory(state=PUBLISHED)
         pagecontent = version.content
@@ -246,6 +268,64 @@ class ListActionsTestCase(CMSTestCase):
             element["href"],
             reverse("admin:cms_page_advanced", args=(pagecontent.page_id,)),
         )
+
+
+class SetHomeViewTestCase(CMSTestCase):
+    def test_get_method_is_not_allowed(self):
+        pagecontent = PageContentWithVersionFactory()
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(
+                self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
+            )
+        self.assertEqual(response.status_code, 405)
+
+    def test_root_page_is_allowed_to_set_home(self):
+        version = PageVersionFactory(content__page__node__depth=1)
+        pagecontent = version.content
+        version.publish(self.get_superuser())
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
+            )
+        url = reverse("admin:cms_pagecontent_changelist")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+
+    def test_non_root_page_should_not_allowed_to_set_home(self):
+        version = PageVersionFactory(content__page__node__depth=2)
+        pagecontent = version.content
+        version.publish(self.get_superuser())
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.content.decode("utf-8"), "The page is not eligible to be home."
+        )
+
+    def test_non_existing_page_should_result_404(self):
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", 99)
+            )
+        self.assertEqual(response.status_code, 404)
+
+    def test_permission_to_set_home_page(self):
+        version = PageVersionFactory(content__page__node__depth=1)
+        pagecontent = version.content
+        version.publish(self.get_superuser())
+
+        with self.login_user_context(self.get_superuser()), patch(
+            "djangocms_versioning.admin.VersioningAdminMixin.has_change_permission",
+            return_value=False,
+        ) as mock:
+            response = self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
+            )
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(response.status_code, 403)
 
 
 class DuplicateViewTestCase(CMSTestCase):

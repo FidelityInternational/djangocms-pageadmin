@@ -1,17 +1,22 @@
 from django.conf.urls import url
+from django.core.exceptions import PermissionDenied
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
+from django.db import transaction
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import format_html, format_html_join
+from django.utils.decorators import method_decorator
+from django.utils.html import format_html, format_html_join, force_text
 from django.utils.translation import ugettext_lazy as _
+from django.views.decorators.http import require_POST
 
 from cms import api
 from cms.admin.pageadmin import PageContentAdmin as DefaultPageContentAdmin
 from cms.extensions import extension_pool
 from cms.models import PageContent
+from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
 from djangocms_version_locking.helpers import version_is_locked
@@ -19,10 +24,13 @@ from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 
 from .filters import LanguageFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
+
+require_POST = method_decorator(require_POST)
 
 
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
@@ -97,6 +105,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def get_list_actions(self):
         return [
+            self._set_home_link,
             self._get_preview_link,
             self._get_edit_link,
             self._get_duplicate_link,
@@ -146,6 +155,31 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             "djangocms_pageadmin/admin/icons/duplicate.html",
             {"url": url, "disabled": disabled},
         )
+
+    def _set_home_link(self, obj, request, disabled=False):
+        url = reverse(
+            "admin:{app}_{model}_set_home_content".format(
+                app=self.model._meta.app_label, model=self.model._meta.model_name
+            ),
+            args=(obj.pk,),
+        )
+
+        if obj.page.is_home:
+            return render_to_string(
+                "djangocms_pageadmin/admin/icons/home.html",
+                {"url": "", "disabled": disabled},
+            )
+        else:
+            return render_to_string(
+                "djangocms_pageadmin/admin/icons/set_home.html",
+                {
+                    "url": url,
+                    "disabled": disabled,
+                    "action": True,
+                    "get": False,
+                    "is_home": obj.page.is_home,
+                },
+            )
 
     def _get_unpublish_link(self, obj, request, disabled=False):
         version = proxy_model(self.get_version(obj))
@@ -275,6 +309,43 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             request, "djangocms_pageadmin/admin/duplicate_confirmation.html", context
         )
 
+    @require_POST
+    @transaction.atomic
+    def set_home_view(self, request, object_id):
+        page_content = self.get_object(request, object_id=unquote(object_id))
+
+        if not self.has_change_permission(request, page_content):
+            raise PermissionDenied("You do not have permission to set 'home'.")
+
+        if page_content is None:
+            raise self._get_404_exception(object_id)
+
+        page = page_content.page
+        if not page.is_potential_home():
+            return HttpResponseBadRequest(
+                force_text(_("The page is not eligible to be home."))
+            )
+
+        new_home_tree, old_home_tree = page.set_as_homepage(request.user)
+
+        # Check if one of the affected pages either from the old homepage
+        # or the homepage had an apphook attached
+        if old_home_tree:
+            apphooks_affected = old_home_tree.has_apphooks()
+        else:
+            apphooks_affected = False
+
+        if not apphooks_affected:
+            apphooks_affected = new_home_tree.has_apphooks()
+
+        if apphooks_affected:
+            # One or more pages affected by this operation was attached to an apphook.
+            # As a result, fire the apphook reload signal to reload the url patterns.
+            set_restart_trigger()
+
+        info = (self.model._meta.app_label, self.model._meta.model_name)
+        return HttpResponseRedirect(reverse("admin:{}_{}_changelist".format(*info)))
+
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
@@ -282,7 +353,12 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 r"^(.+)/duplicate-content/$",
                 self.admin_site.admin_view(self.duplicate_view),
                 name="{}_{}_duplicate_content".format(*info),
-            )
+            ),
+            url(
+                r"^(.+)/set-home-content/$",
+                self.admin_site.admin_view(self.set_home_view),
+                name="{}_{}_set_home_content".format(*info),
+            ),
         ] + super().get_urls()
 
     class Media:
