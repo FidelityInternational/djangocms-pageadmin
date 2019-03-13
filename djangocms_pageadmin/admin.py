@@ -161,22 +161,17 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             args=(obj.pk,),
         )
 
-        if obj.page.is_home:
-            return render_to_string(
-                "djangocms_pageadmin/admin/icons/home.html",
-                {"url": "", "disabled": disabled},
-            )
-        else:
-            return render_to_string(
-                "djangocms_pageadmin/admin/icons/set_home.html",
-                {
-                    "url": url,
-                    "disabled": disabled,
-                    "action": True,
-                    "get": False,
-                    "is_home": obj.page.is_home,
-                },
-            )
+
+        return render_to_string(
+            "djangocms_pageadmin/admin/icons/set_home.html",
+            {
+                "url": url,
+                "disabled": disabled,
+                "action": True,
+                "get": False,
+                "is_home": obj.page.is_home,
+            },
+        )
 
     def _get_unpublish_link(self, obj, request, disabled=False):
         version = proxy_model(self.get_version(obj))
