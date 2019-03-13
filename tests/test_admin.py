@@ -333,13 +333,11 @@ class SetHomeViewTestCase(CMSTestCase):
         to_be_homepage = version_2.content
         with self.login_user_context(self.get_superuser()), patch(
             "cms.models.query.PageQuerySet.has_apphooks", return_value=True
-        ), patch(
-            "djangocms_pageadmin.admin.set_restart_trigger", return_value=True
-        ) as mock_handler:
+        ), patch("djangocms_pageadmin.admin.set_restart_trigger") as mock_handler:
             self.client.post(
                 self.get_admin_url(PageContent, "set_home_content", to_be_homepage.pk)
             )
-            mock_handler.assert_called()
+            mock_handler.assert_called_once()
 
     def test_when_old_homepage_tree_has_no_apphooks_shouldnt_trigger_signal(self):
         PageVersionFactory(
@@ -348,8 +346,6 @@ class SetHomeViewTestCase(CMSTestCase):
         version_2 = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
         to_be_homepage = version_2.content
         with self.login_user_context(self.get_superuser()), patch(
-            "cms.models.query.PageQuerySet.has_apphooks", return_value=False
-        ) as mock, patch(
             "djangocms_pageadmin.admin.set_restart_trigger"
         ) as mock_handler:
             self.client.post(
