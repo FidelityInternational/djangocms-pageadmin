@@ -1,9 +1,11 @@
+import mock
+
 from functools import partial
 from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
 from cms.api import add_plugin
@@ -268,33 +270,38 @@ class SetHomeViewTestCase(CMSTestCase):
             response = self.client.get(
                 self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
             )
+        pagecontent.page.refresh_from_db()
         self.assertEqual(response.status_code, 405)
+        self.assertFalse(pagecontent.page.is_home)
 
     def test_root_page_is_allowed_to_set_home(self):
-        version = PageVersionFactory(content__page__node__depth=1)
+        version = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
         pagecontent = version.content
-        version.publish(self.get_superuser())
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
                 self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
             )
         url = reverse("admin:cms_pagecontent_changelist")
-
+        pagecontent.page.refresh_from_db()
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, url)
 
+        pagecontent.page.refresh_from_db()
+        self.assertTrue(pagecontent.page.is_home)
+
     def test_non_root_page_should_not_allowed_to_set_home(self):
-        version = PageVersionFactory(content__page__node__depth=2)
+        version = PageVersionFactory(content__page__node__depth=2, state=PUBLISHED)
         pagecontent = version.content
-        version.publish(self.get_superuser())
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
                 self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
             )
+        pagecontent.page.refresh_from_db()
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode("utf-8"), "The page is not eligible to be home."
         )
+        self.assertFalse(pagecontent.page.is_home)
 
     def test_non_existing_page_should_result_404(self):
         with self.login_user_context(self.get_superuser()):
@@ -304,10 +311,8 @@ class SetHomeViewTestCase(CMSTestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_permission_to_set_home_page(self):
-        version = PageVersionFactory(content__page__node__depth=1)
+        version = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
         pagecontent = version.content
-        version.publish(self.get_superuser())
-
         with self.login_user_context(self.get_superuser()), patch(
             "djangocms_versioning.admin.VersioningAdminMixin.has_change_permission",
             return_value=False,
@@ -315,8 +320,57 @@ class SetHomeViewTestCase(CMSTestCase):
             response = self.client.post(
                 self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
             )
+        pagecontent.page.refresh_from_db()
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(response.status_code, 403)
+        self.assertFalse(pagecontent.page.is_home)
+
+    def test_when_new_homepage_tree_has_apphooks_should_trigger_signal(self):
+        PageVersionFactory(
+            content__page__node__depth=1, content__page__is_home=1, state=PUBLISHED
+        )
+        version_2 = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
+        to_be_homepage = version_2.content
+        with self.login_user_context(self.get_superuser()), patch(
+            "cms.models.query.PageQuerySet.has_apphooks", return_value=True
+        ), patch(
+            "djangocms_pageadmin.admin.set_restart_trigger", return_value=True
+        ) as mock_handler:
+            self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", to_be_homepage.pk)
+            )
+            mock_handler.assert_called()
+
+    def test_when_old_homepage_tree_has_no_apphooks_shouldnt_trigger_signal(self):
+        PageVersionFactory(
+            content__page__node__depth=1, content__page__is_home=1, state=PUBLISHED
+        )
+        version_2 = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
+        to_be_homepage = version_2.content
+        with self.login_user_context(self.get_superuser()), patch(
+            "cms.models.query.PageQuerySet.has_apphooks", return_value=False
+        ) as mock, patch(
+            "djangocms_pageadmin.admin.set_restart_trigger"
+        ) as mock_handler:
+            self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", to_be_homepage.pk)
+            )
+
+            mock_handler.assert_not_called()
+
+    def test_when_old_home_tree_is_none_should_not_trigger_signal(self):
+        version_1 = PageVersionFactory(
+            content__page__node__depth=1, content__page__is_home=1, state=PUBLISHED
+        )
+        homepage = version_1.content
+        with self.login_user_context(self.get_superuser()), patch(
+            "cms.models.query.PageQuerySet.has_apphooks", return_value=False
+        ) as mock, patch("cms.signals.apphook.set_restart_trigger") as mock_handler:
+            self.client.post(
+                self.get_admin_url(PageContent, "set_home_content", homepage.pk)
+            )
+
+            mock_handler.assert_not_called()
 
 
 class DuplicateViewTestCase(CMSTestCase):
