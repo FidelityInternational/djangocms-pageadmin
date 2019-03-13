@@ -373,6 +373,37 @@ class SetHomeViewTestCase(CMSTestCase):
             mock_handler.assert_not_called()
 
 
+class SetHomeViewTransactionTestCase(TransactionTestCase):
+    def setUp(self):
+        self.user = UserFactory(is_staff=True, is_superuser=True)
+        # Login
+        self.client.force_login(self.user)
+
+    def test_set_home_is_wrapped_in_db_transaction(self):
+        class FakeError(Exception):
+            pass
+
+        version_1 = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
+        homepage = version_1.content
+
+        # Asserting to make sure page is not already set as home
+        self.assertFalse(homepage.page.is_home)
+
+        # Patching app_hooks which has been called after setting home on view so transaction
+        # should roll back in case of error
+        with patch("cms.models.query.PageQuerySet.has_apphooks", side_effect=FakeError):
+            try:
+                self.client.post(
+                    reverse(
+                        "admin:cms_pagecontent_set_home_content", args=[homepage.pk]
+                    )
+                )
+            except FakeError:
+                pass
+
+        self.assertFalse(homepage.page.is_home)
+
+
 class DuplicateViewTestCase(CMSTestCase):
     def test_obj_does_not_exist(self):
         with self.login_user_context(self.get_superuser()), patch(
