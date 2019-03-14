@@ -7,7 +7,7 @@
 
   $(function () {
     var createBurgerMenu = function createBurgerMenu(row) {
-      /* create anchor icon */
+      /* create burger menu anchor icon */
       var anchor = document.createElement('A');
       var cssclass = document.createAttribute('class');
       cssclass.value = 'btn cms-page-admin-action-btn closed';
@@ -55,6 +55,10 @@
         var li_anchor = document.createElement('A');
         cssclass = document.createAttribute('class');
         cssclass.value = 'cms-page-admin-action-burger-options-icon';
+        if ($(item).hasClass('cms-form-get-method')) {
+          /* ensure the fake-form selector is propagated to the new anchor */
+          cssclass.value += ' cms-form-get-method';
+        }
         li_anchor.setAttributeNode(cssclass);
         var href = document.createAttribute('href');
         href.value = $(item).attr('href');
@@ -86,6 +90,9 @@
       anchor.addEventListener('click', function (ev) {
         ev.stopPropagation();
         toggleBurgerMenu(anchor, optionsContainer);
+        if ($(ev.target).hasClass('cms-form-get-method')) {
+          fakeForm(ev);
+        }
       });
       /* close burger menu if clicking outside */
       $(window).click(function() {
@@ -130,8 +137,7 @@
 
     /* it is not possible to put a form inside a form, so
       actions have to create their own form on click */
-
-    $('.js-page-admin-action, .cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn').on('click', function (e) {
+    var fakeForm = function (e) {
       e.preventDefault();
       var action = $(e.currentTarget);
       var formMethod = action.attr('class').indexOf('cms-form-get-method') !== -1 ? 'GET' : 'POST';
@@ -152,7 +158,9 @@
       }
 
       fakeForm.appendTo(body).submit();
-    });
+    }
+
+    $('.js-page-admin-action, .cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn').on('click', fakeForm);
     $('.js-page-admin-close-sideframe').on('click', function () {
       try {
         window.top.CMS.API.Sideframe.close();
