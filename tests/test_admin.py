@@ -380,24 +380,26 @@ class SetHomeViewTransactionTestCase(TransactionTestCase):
             pass
 
         version_1 = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
-        homepage = version_1.content
+        page_content = version_1.content
 
-        # Asserting to make sure page is not already set as home
-        self.assertFalse(homepage.page.is_home)
+        # Asserting to make sure page is not set as homepage
+        self.assertFalse(page_content.page.is_home)
 
-        # Patching app_hooks which has been called after setting home on view so transaction
-        # should roll back in case of error
+        # Patching has_apphooks which is get called after setting home on view so transaction
+        # should roll back in event of error
         with patch("cms.models.query.PageQuerySet.has_apphooks", side_effect=FakeError):
             try:
                 self.client.post(
                     reverse(
-                        "admin:cms_pagecontent_set_home_content", args=[homepage.pk]
+                        "admin:cms_pagecontent_set_home_content", args=[page_content.pk]
                     )
                 )
             except FakeError:
                 pass
 
-        self.assertFalse(homepage.page.is_home)
+        # Refresh object from db
+        page_content.page.refresh_from_db()
+        self.assertFalse(page_content.page.is_home)
 
 
 class DuplicateViewTestCase(CMSTestCase):
