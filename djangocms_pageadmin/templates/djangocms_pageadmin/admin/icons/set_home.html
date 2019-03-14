@@ -3,9 +3,5 @@
 {% block title %}{% trans 'Set as a home' %}{% endblock %}
 {% block name %}set-home{% endblock %}
 {% block icon %}
-    {% if is_home %}
-        {% static 'djangocms_pageadmin/svg/home.svg' %}
-    {% else %}
         {% static 'djangocms_pageadmin/svg/home_icon.svg' %}
-    {% endif %}
 {% endblock %}

@@ -54,7 +54,7 @@
         /* create an anchor from the item */
         var li_anchor = document.createElement('A');
         cssclass = document.createAttribute('class');
-        cssclass.value = 'cms-page-admin-action-burger-options-icon';
+        cssclass.value = 'cms-page-admin-action-burger-options-icon' + $(item).attr('class');
         li_anchor.setAttributeNode(cssclass);
         var href = document.createAttribute('href');
         href.value = $(item).attr('href');
@@ -131,7 +131,7 @@
     /* it is not possible to put a form inside a form, so
       actions have to create their own form on click */
 
-    $('.js-page-admin-action, .cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn').on('click', function (e) {
+    $('.js-page-admin-action,.cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn').on('click', function (e) {
       e.preventDefault();
       var action = $(e.currentTarget);
       var formMethod = action.attr('class').indexOf('cms-form-get-method') !== -1 ? 'GET' : 'POST';
