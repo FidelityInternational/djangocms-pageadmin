@@ -1,5 +1,3 @@
-import mock
-
 from functools import partial
 from unittest.mock import patch
 
@@ -347,7 +345,9 @@ class SetHomeViewTestCase(CMSTestCase):
         to_be_homepage = version_2.content
         with self.login_user_context(self.get_superuser()), patch(
             "djangocms_pageadmin.admin.set_restart_trigger"
-        ) as mock_handler:
+        ) as mock_handler, patch(
+            "cms.models.query.PageQuerySet.has_apphooks", return_value=False
+        ):
             self.client.post(
                 self.get_admin_url(PageContent, "set_home_content", to_be_homepage.pk)
             )
@@ -355,15 +355,14 @@ class SetHomeViewTestCase(CMSTestCase):
             mock_handler.assert_not_called()
 
     def test_when_old_home_tree_is_none_should_not_trigger_signal(self):
-        version_1 = PageVersionFactory(
-            content__page__node__depth=1, content__page__is_home=1, state=PUBLISHED
-        )
-        homepage = version_1.content
+        version_1 = PageVersionFactory(content__page__node__depth=1, state=PUBLISHED)
+        pagecontent = version_1.content
+
         with self.login_user_context(self.get_superuser()), patch(
-            "cms.models.query.PageQuerySet.has_apphooks", return_value=False
-        ) as mock, patch("cms.signals.apphook.set_restart_trigger") as mock_handler:
+            "djangocms_pageadmin.admin.set_restart_trigger"
+        ) as mock_handler:
             self.client.post(
-                self.get_admin_url(PageContent, "set_home_content", homepage.pk)
+                self.get_admin_url(PageContent, "set_home_content", pagecontent.pk)
             )
 
             mock_handler.assert_not_called()

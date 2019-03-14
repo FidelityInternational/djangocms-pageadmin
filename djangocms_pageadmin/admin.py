@@ -75,7 +75,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             url = obj.page.get_absolute_url(obj.language)
             formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
             return format_html(
-                '{home}{lock}<a href="{url}">{url}</a>', url=url, lock=self.locked(obj), home=self.is_home(obj)
+                '{home}{lock}{url}', url=formatted_url, lock=self.locked(obj), home=self.is_home(obj)
             )
 
     url.short_description = _("url")
@@ -97,7 +97,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         if obj.page.is_home:
             return render_to_string('djangocms_pageadmin/admin/icons/home.html')
         return ""
-
 
     def modified_date(self, obj):
         version = self.get_version(obj)
