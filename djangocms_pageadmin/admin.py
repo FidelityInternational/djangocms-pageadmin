@@ -75,7 +75,10 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             url = obj.page.get_absolute_url(obj.language)
             formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
             return format_html(
-                '{home}{lock}{url}', url=formatted_url, lock=self.locked(obj), home=self.is_home(obj)
+                "{home}{lock}{url}",
+                url=formatted_url,
+                lock=self.locked(obj),
+                home=self.is_home(obj),
             )
 
     url.short_description = _("url")
@@ -95,7 +98,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def is_home(self, obj):
         if obj.page.is_home:
-            return render_to_string('djangocms_pageadmin/admin/icons/home.html')
+            return render_to_string("djangocms_pageadmin/admin/icons/home.html")
         return ""
 
     def modified_date(self, obj):
@@ -167,16 +170,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         )
 
         if obj.page.is_home:
-            return ''
+            return ""
 
         return render_to_string(
             "djangocms_pageadmin/admin/icons/set_home.html",
-            {
-                "url": url,
-                "disabled": disabled,
-                "action": True,
-                "get": False,
-            },
+            {"url": url, "disabled": disabled, "action": True, "get": False},
         )
 
     def _get_unpublish_link(self, obj, request, disabled=False):
