@@ -323,13 +323,13 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def set_home_view(self, request, object_id):
         page_content = self.get_object(request, object_id=unquote(object_id))
 
-        if not self.has_change_permission(request, page_content):
-            raise PermissionDenied("You do not have permission to set 'home'.")
-
         if page_content is None:
             raise self._get_404_exception(object_id)
 
         page = page_content.page
+        if not self.has_change_permission(request, page):
+            raise PermissionDenied("You do not have permission to set 'home'.")
+
         if not page.is_potential_home():
             return HttpResponseBadRequest(
                 force_text(_("The page is not eligible to be home."))
