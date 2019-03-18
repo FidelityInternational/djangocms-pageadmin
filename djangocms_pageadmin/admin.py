@@ -162,15 +162,16 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         )
 
     def _set_home_link(self, obj, request, disabled=False):
+
+        if obj.page.is_home:
+            return ""
+
         url = reverse(
             "admin:{app}_{model}_set_home_content".format(
                 app=self.model._meta.app_label, model=self.model._meta.model_name
             ),
             args=(obj.pk,),
         )
-
-        if obj.page.is_home:
-            return ""
 
         return render_to_string(
             "djangocms_pageadmin/admin/icons/set_home.html",
@@ -327,7 +328,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             raise self._get_404_exception(object_id)
 
         page = page_content.page
-        if not self.has_change_permission(request, page):
+        if not page.has_change_permission(request.user):
             raise PermissionDenied("You do not have permission to set 'home'.")
 
         if not page.is_potential_home():
