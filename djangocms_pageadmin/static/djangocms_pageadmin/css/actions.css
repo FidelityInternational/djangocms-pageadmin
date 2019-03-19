@@ -14,7 +14,7 @@
     word-break: break-all;
     white-space: normal !important;
 }
-.cms-version-locked-status-icon img, .cms-version-set-home-icon img {
+.cms-version-locked-status-icon img, .cms-page-admin-home img {
     width: 15px;
     height: 15px;
 }
