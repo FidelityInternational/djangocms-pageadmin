@@ -48,8 +48,12 @@
 
 /* disable clicking for inactive buttons */
 .btn.cms-page-admin-action-btn.inactive {
-    cursor: not-allowed;
     pointer-events: none;
+    background-color: #e1e1e1 !important;
+}
+
+.btn.cms-page-admin-action-btn.inactive img {
+    opacity: 0.5;
 }
 
 /* set size and spacing between for the action icons */
@@ -83,7 +87,7 @@ ul.cms-pagetree-dropdown-menu-inner li:hover {
 }
 
 /* set the size of the option icon */
-.cms-page-admin-action-burger-options-icon img{
+.cms-page-admin-action-burger-options-anchor img{
     width: 20px;
     height: 20px;
 }
