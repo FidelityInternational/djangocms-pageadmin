@@ -19,21 +19,21 @@
       var src = document.createAttribute('src');
       src.value = pageadmin_static_url_prefix + 'svg/menu.svg';
       icon.setAttributeNode(src);
-      anchor.appendChild(icon); 
-
+      anchor.appendChild(icon);
       /* create options container */
+
       var optionsContainer = document.createElement('DIV');
       cssclass = document.createAttribute('class');
-      cssclass.value = 
-      'cms-pagetree-dropdown-menu ' + // main selector for the menu
+      cssclass.value = 'cms-pagetree-dropdown-menu ' + // main selector for the menu
       'cms-pagetree-dropdown-menu-arrow-right-top'; // keeps the menu arrow in position
+
       optionsContainer.setAttributeNode(cssclass);
       var ul = document.createElement('UL');
       cssclass = document.createAttribute('class');
       cssclass.value = 'cms-pagetree-dropdown-menu-inner';
-      ul.setAttributeNode(cssclass); 
-      
+      ul.setAttributeNode(cssclass);
       /* get the existing actions and move them into the options container */
+
       var li;
       var text;
       var actions = $(row).children('.field-list_actions');
@@ -49,58 +49,58 @@
           return;
         }
 
-        li = document.createElement('LI'); 
-
+        li = document.createElement('LI');
         /* create an anchor from the item */
+
         var li_anchor = document.createElement('A');
         cssclass = document.createAttribute('class');
-        cssclass.value = 'cms-page-admin-action-burger-options-icon';
+        cssclass.value = 'cms-page-admin-action-burger-options-anchor';
+
         if ($(item).hasClass('cms-form-get-method')) {
           /* ensure the fake-form selector is propagated to the new anchor */
           cssclass.value += ' cms-form-get-method';
         }
+
         li_anchor.setAttributeNode(cssclass);
         var href = document.createAttribute('href');
         href.value = $(item).attr('href');
-        li_anchor.setAttributeNode(href); 
-
+        li_anchor.setAttributeNode(href);
         /* move the an image element */
-        var existing_img = $(item).children('img');
-        li_anchor.appendChild(existing_img[0]); 
 
+        var existing_img = $(item).children('img');
+        li_anchor.appendChild(existing_img[0]);
         /* create the button text */
+
         text = document.createTextNode(item.title);
         var span = document.createElement('SPAN');
         span.appendChild(text); // construct the button
 
         li.appendChild(li_anchor);
         li_anchor.appendChild(span);
-        ul.appendChild(li); 
-
+        ul.appendChild(li);
         /* destroy original replaced buttons */
-        actions[0].removeChild(item);
-      }); 
 
+        actions[0].removeChild(item);
+      });
       /* add the options to the drop-down */
+
       optionsContainer.appendChild(ul);
       actions[0].appendChild(anchor);
       document.body.appendChild(optionsContainer);
-
       /* listen for burger menu clicks */
+
       anchor.addEventListener('click', function (ev) {
         ev.stopPropagation();
         toggleBurgerMenu(anchor, optionsContainer);
-        if ($(ev.target).hasClass('cms-form-get-method')) {
-          fakeForm(ev);
-        }
       });
       /* close burger menu if clicking outside */
-      $(window).click(function() {
-        closeBurgerMenu()
+
+      $(window).click(function () {
+        closeBurgerMenu();
       });
     };
 
-    var toggleBurgerMenu = function (burgerMenuAnchor, optionsContainer) {
+    var toggleBurgerMenu = function toggleBurgerMenu(burgerMenuAnchor, optionsContainer) {
       var bm = $(burgerMenuAnchor);
       var op = $(optionsContainer);
       var closed = bm.hasClass('closed');
@@ -123,21 +123,20 @@
       op.css('top', pos.top);
     };
 
-    var closeBurgerMenu = function() {
+    var closeBurgerMenu = function closeBurgerMenu() {
       $('.cms-pagetree-dropdown-menu').removeClass('open');
       $('.cms-pagetree-dropdown-menu').addClass('closed');
       $('.cms-page-admin-action-btn').removeClass('open');
       $('.cms-page-admin-action-btn').addClass('closed');
-    }
+    };
 
     $('#result_list').find('tr').each(function (index, item) {
       createBurgerMenu(item);
-    }); 
-
-
+    });
     /* it is not possible to put a form inside a form, so
       actions have to create their own form on click */
-    var fakeForm = function (e) {
+
+    var fakeForm = function fakeForm(e) {
       e.preventDefault();
       var action = $(e.currentTarget);
       var formMethod = action.attr('class').indexOf('cms-form-get-method') !== -1 ? 'GET' : 'POST';
@@ -158,9 +157,9 @@
       }
 
       fakeForm.appendTo(body).submit();
-    }
+    };
 
-    $('.js-page-admin-action, .cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn').on('click', fakeForm);
+    $('.js-page-admin-action, .cms-page-admin-js-publish-btn, .cms-page-admin-js-edit-btn, .cms-page-admin-action-burger-options-anchor').on('click', fakeForm);
     $('.js-page-admin-close-sideframe').on('click', function () {
       try {
         window.top.CMS.API.Sideframe.close();
