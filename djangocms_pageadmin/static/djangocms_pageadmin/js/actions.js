@@ -64,8 +64,6 @@
         li_anchor.setAttributeNode(cssclass);
         var href = document.createAttribute('href');
         href.value = $(item).attr('href');
-        console.log($(item).attr('href'))
-        console.log(cssclass.value)
         li_anchor.setAttributeNode(href);
         /* move the an image element */
 
