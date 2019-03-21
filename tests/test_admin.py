@@ -334,7 +334,7 @@ class SetHomeViewTestCase(CMSTestCase):
             self.client.post(
                 self.get_admin_url(PageContent, "set_home_content", to_be_homepage.pk)
             )
-            mock_handler.assert_called_once()
+            mock_handler.assert_called_once_with()
 
     def test_when_old_homepage_tree_has_no_apphooks_shouldnt_trigger_signal(self):
         PageVersionFactory(
