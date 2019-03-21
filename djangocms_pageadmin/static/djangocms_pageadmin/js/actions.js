@@ -64,6 +64,8 @@
         li_anchor.setAttributeNode(cssclass);
         var href = document.createAttribute('href');
         href.value = $(item).attr('href');
+        console.log($(item).attr('href'))
+        console.log(cssclass.value)
         li_anchor.setAttributeNode(href);
         /* move the an image element */
 
@@ -137,10 +139,12 @@
       actions have to create their own form on click */
 
     var fakeForm = function fakeForm(e) {
-      e.preventDefault();
       var action = $(e.currentTarget);
       var formMethod = action.attr('class').indexOf('cms-form-get-method') !== -1 ? 'GET' : 'POST';
-      var csrfToken = formMethod == 'GET' ? '' : '<input type="hidden" name="csrfmiddlewaretoken" value="' + document.cookie.match(/csrftoken=([^;]*);?/)[1] + '">';
+      if (formMethod == 'GET') return
+      e.preventDefault();
+
+      var csrfToken = '<input type="hidden" name="csrfmiddlewaretoken" value="' + document.cookie.match(/csrftoken=([^;]*);?/)[1] + '">';
       var fakeForm = $('<form style="display: none" action="' + action.attr('href') + '" method="' + formMethod + '">' + csrfToken + '</form>');
       var keepSideFrame = action.attr('class').indexOf('js-page-admin-keep-sideframe') !== -1; // always break out of the sideframe, cause it was never meant to open cms views inside it
 
