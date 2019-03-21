@@ -3,8 +3,8 @@
 ---------------------------------------*/
 
 /* ensure certain columns aren't too wide */
-.field-title {
-    min-width: 300px;
+.field-get_title {
+    min-width: 250px;
     word-break: break-word;
     white-space: normal !important;
 }
