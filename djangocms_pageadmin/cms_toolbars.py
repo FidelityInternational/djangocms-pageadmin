@@ -1,17 +1,8 @@
 from collections import OrderedDict
 
-from django.apps import apps
-from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
-
 from cms.cms_toolbars import PageToolbar
-from cms.toolbar.items import ButtonList
 from cms.toolbar_pool import toolbar_pool
-from cms.utils import get_language_from_request, page_permissions
-from cms.utils.page_permissions import user_can_change_page, user_can_delete_page
-from cms.utils.urlutils import add_url_parameters, admin_reverse
-
-from djangocms_versioning.models import Version
+from cms.utils.urlutils import admin_reverse
 
 
 # Identifiers for search

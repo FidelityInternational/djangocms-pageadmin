@@ -13,11 +13,10 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.toolbar import CMSToolbar
 from cms.toolbar.utils import get_object_preview_url
 from cms.toolbar_pool import toolbar_pool
-from cms.utils import conf
 from cms.utils.plugins import downcast_plugins
-from menus.menu_pool import menu_pool
 
 from bs4 import BeautifulSoup
+from djangocms_versioning.cms_toolbars import VersioningToolbar
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
@@ -577,7 +576,7 @@ class CMSToolbarTestCase(CMSTestCase):
     def test_pages_menu_item_url_has_no_params(self):
         """
         Create a page and get the toolbar for that page's preview
-        Then check that the page menu item does not have a query string, 
+        Then check that the page menu item does not have a query string,
         so as not to trigger filters
         """
         user = self.get_superuser()
