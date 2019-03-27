@@ -576,6 +576,11 @@ class RegistrationTestCase(TestCase):
 @override_settings(CMS_PERMISSION=True)
 class CMSToolbarTestCase(CMSTestCase): 
     def test_pages_menu_item_url_has_no_params(self):
+        """
+        Create a page and get the toolbar for that page's preview
+        Then check that the page menu item does not have a query string, 
+        so as not to trigger filters
+        """
         user = self.get_superuser()
         pagecontent = PageVersionFactory(content__template="")
         toolbar = get_toolbar(
@@ -590,7 +595,11 @@ class CMSToolbarTestCase(CMSTestCase):
         self.assertTrue('/en/admin/cms/pagecontent/?language=en', pagemenu.url)
 
     def test_cmstoolbar_is_replaced(self):
+        """
+        Create a page and check that the PageToolbar has been replaced by the PageAdminToolbar
+        """
         user = self.get_superuser()
         page = create_page(title='Test', template='page.html', language='en', created_by=user)
         self.request = self.get_page_request(page, user, '/')
         self.assertIn('djangocms_pageadmin.cms_toolbars.PageAdminToolbar', toolbar_pool.toolbars)
+
