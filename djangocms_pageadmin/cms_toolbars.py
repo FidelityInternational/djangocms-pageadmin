@@ -4,7 +4,6 @@ from django.apps import apps
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
-
 from cms.cms_toolbars import PageToolbar
 from cms.toolbar.items import ButtonList
 from cms.toolbar_pool import toolbar_pool
@@ -31,9 +30,10 @@ class PageAdminToolbar(PageToolbar):
         This works because that view has no filters. PageAdmin has filters, so this causes unwanted filtering.
         Thus replace the PageToolbar with to remove the filter parameters from the URL
         """
-        super(PageAdminToolbar, self).change_admin_menu()
+        super().change_admin_menu()
         menu = self.toolbar.get_menu(ADMIN_MENU_IDENTIFIER)
-        if menu.items[0].name == 'Pages...':
+        page_content_url = menu.items[0].get_context()['url']
+        if "admin/cms/pagecontent/" in page_content_url:
             menu.remove_item(menu.items[0])
             url = admin_reverse('cms_pagecontent_changelist')  # cms page admin
             params = {'language': self.toolbar.request_language}

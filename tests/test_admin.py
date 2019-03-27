@@ -11,17 +11,18 @@ from cms.api import add_plugin, create_page
 from cms.models import PageContent, PageUrl
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.toolbar import CMSToolbar
-from cms.toolbar_pool import toolbar_pool
 from cms.toolbar.utils import get_object_preview_url
-from cms.utils.plugins import downcast_plugins
+from cms.toolbar_pool import toolbar_pool
 from cms.utils import conf
-from djangocms_pageadmin.cms_toolbars import PageAdminToolbar
+from cms.utils.plugins import downcast_plugins
+from menus.menu_pool import menu_pool
 
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
 from djangocms_pageadmin.admin import PageContentAdmin
+from djangocms_pageadmin.cms_toolbars import PageAdminToolbar
 from djangocms_pageadmin.test_utils.factories import (
     PageContentWithVersionFactory,
     PageVersionFactory,
@@ -29,8 +30,6 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
-
-from menus.menu_pool import menu_pool
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
@@ -595,4 +594,3 @@ class CMSToolbarTestCase(CMSTestCase):
         page = create_page(title='Test', template='page.html', language='en', created_by=user)
         self.request = self.get_page_request(page, user, '/')
         self.assertIn('djangocms_pageadmin.cms_toolbars.PageAdminToolbar', toolbar_pool.toolbars)
-
