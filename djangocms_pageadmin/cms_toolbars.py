@@ -33,12 +33,13 @@ class PageAdminToolbar(PageToolbar):
         super().change_admin_menu()
         menu = self.toolbar.get_menu(ADMIN_MENU_IDENTIFIER)
         page_content_url = menu.items[0].get_context()['url']
-        if "admin/cms/pagecontent/" in page_content_url:
-            menu.remove_item(menu.items[0])
+        try:
+            found = "admin/cms/pagecontent/" in page_content_url
+        except Exception as e:
+            return 
+        if found:
             url = admin_reverse('cms_pagecontent_changelist')  # cms page admin
-            params = {'language': self.toolbar.request_language}
-            url = add_url_parameters(url, params)
-            menu.add_sideframe_item(_('Pages'), url=url, position=0)        
+            menu.items[0].url = url        
 
 
 def replace_toolbar(old, new):
