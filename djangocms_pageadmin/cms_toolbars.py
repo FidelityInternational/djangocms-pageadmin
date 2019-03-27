@@ -49,4 +49,5 @@ def replace_toolbar(old, new):
         for name, toolbar in toolbar_pool.toolbars.items()
     ])
 
+
 replace_toolbar(PageToolbar, PageAdminToolbar)
