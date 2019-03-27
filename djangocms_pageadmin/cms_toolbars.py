@@ -35,7 +35,7 @@ class PageAdminToolbar(PageToolbar):
         item = menu.items[0]
         if item and "admin/cms/pagecontent/" in item.url :
             url = admin_reverse('cms_pagecontent_changelist')  # cms page admin
-            menu.items[0].url = url        
+            item.url = url        
 
 
 def replace_toolbar(old, new):
