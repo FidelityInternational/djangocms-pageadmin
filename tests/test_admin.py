@@ -34,6 +34,7 @@ from djangocms_pageadmin.test_utils.factories import (
 
 parse_html = partial(BeautifulSoup, features="lxml")
 
+
 def get_toolbar(content_obj, user=None, **kwargs):
     """
     Helper method to set up the toolbar
@@ -43,38 +44,36 @@ def get_toolbar(content_obj, user=None, **kwargs):
     if not user:
         user = UserFactory(is_staff=True)
 
-    request = kwargs.get('request', RequestFactory().get('/'))
+    request = kwargs.get("request", RequestFactory().get("/"))
     request.user = user
-    request.session = kwargs.get('session', {})
-    request.current_page = getattr(content_obj, 'page', None)
+    request.session = kwargs.get("session", {})
+    request.current_page = getattr(content_obj, "page", None)
     request.toolbar = CMSToolbar(request)
     # Set the toolbar class
-    if kwargs.get('toolbar_class', False):
-        toolbar_class = kwargs.get('toolbar_class')
+    if kwargs.get("toolbar_class", False):
+        toolbar_class = kwargs.get("toolbar_class")
     else:
         toolbar_class = VersioningToolbar
     toolbar = toolbar_class(
-        request,
-        toolbar=request.toolbar,
-        is_current_app=True,
-        app_path='/',
+        request, toolbar=request.toolbar, is_current_app=True, app_path="/"
     )
     toolbar.toolbar.set_object(content_obj)
     # Set the toolbar mode
-    if kwargs.get('edit_mode', False):
+    if kwargs.get("edit_mode", False):
         toolbar.toolbar.edit_mode_active = True
         toolbar.toolbar.content_mode_active = False
         toolbar.toolbar.structure_mode_active = False
-    elif kwargs.get('preview_mode', False):
+    elif kwargs.get("preview_mode", False):
         toolbar.toolbar.edit_mode_active = False
         toolbar.toolbar.content_mode_active = True
         toolbar.toolbar.structure_mode_active = False
-    elif kwargs.get('structure_mode', False):
+    elif kwargs.get("structure_mode", False):
         toolbar.toolbar.edit_mode_active = False
         toolbar.toolbar.content_mode_active = False
         toolbar.toolbar.structure_mode_active = True
     toolbar.populate()
     return toolbar
+
 
 class AdminTestCase(CMSTestCase):
     def test_changelist(self):
@@ -574,7 +573,7 @@ class RegistrationTestCase(TestCase):
 
 
 @override_settings(CMS_PERMISSION=True)
-class CMSToolbarTestCase(CMSTestCase): 
+class CMSToolbarTestCase(CMSTestCase):
     def test_pages_menu_item_url_has_no_params(self):
         """
         Create a page and get the toolbar for that page's preview
@@ -590,16 +589,19 @@ class CMSToolbarTestCase(CMSTestCase):
             preview_mode=True,
         )
         toolbar.post_template_populate()
-        menu = toolbar.toolbar.get_menu('admin-menu')
+        menu = toolbar.toolbar.get_menu("admin-menu")
         pagemenu = menu.get_items()[0]
-        self.assertTrue('/en/admin/cms/pagecontent/?language=en', pagemenu.url)
+        self.assertTrue("/en/admin/cms/pagecontent/?language=en", pagemenu.url)
 
     def test_cmstoolbar_is_replaced(self):
         """
         Create a page and check that the PageToolbar has been replaced by the PageAdminToolbar
         """
         user = self.get_superuser()
-        page = create_page(title='Test', template='page.html', language='en', created_by=user)
-        self.request = self.get_page_request(page, user, '/')
-        self.assertIn('djangocms_pageadmin.cms_toolbars.PageAdminToolbar', toolbar_pool.toolbars)
-
+        page = create_page(
+            title="Test", template="page.html", language="en", created_by=user
+        )
+        self.request = self.get_page_request(page, user, "/")
+        self.assertIn(
+            "djangocms_pageadmin.cms_toolbars.PageAdminToolbar", toolbar_pool.toolbars
+        )
