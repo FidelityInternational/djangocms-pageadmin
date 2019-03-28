@@ -3,20 +3,18 @@ from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
-from django.test import RequestFactory, TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 
 from cms.api import add_plugin, create_page
 from cms.models import PageContent, PageUrl
 from cms.test_utils.testcases import CMSTestCase
-from cms.toolbar.toolbar import CMSToolbar
 from cms.toolbar.utils import get_object_preview_url
 from cms.toolbar_pool import toolbar_pool
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
-from djangocms_versioning.cms_toolbars import VersioningToolbar
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
@@ -29,49 +27,10 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
+from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
-
-
-def get_toolbar(content_obj, user=None, **kwargs):
-    """
-    Helper method to set up the toolbar
-    Copied from djangocms-versioning.test_utils.test_helpers
-    """
-    # Set the user if none are sent
-    if not user:
-        user = UserFactory(is_staff=True)
-
-    request = kwargs.get("request", RequestFactory().get("/"))
-    request.user = user
-    request.session = kwargs.get("session", {})
-    request.current_page = getattr(content_obj, "page", None)
-    request.toolbar = CMSToolbar(request)
-    # Set the toolbar class
-    if kwargs.get("toolbar_class", False):
-        toolbar_class = kwargs.get("toolbar_class")
-    else:
-        toolbar_class = VersioningToolbar
-    toolbar = toolbar_class(
-        request, toolbar=request.toolbar, is_current_app=True, app_path="/"
-    )
-    toolbar.toolbar.set_object(content_obj)
-    # Set the toolbar mode
-    if kwargs.get("edit_mode", False):
-        toolbar.toolbar.edit_mode_active = True
-        toolbar.toolbar.content_mode_active = False
-        toolbar.toolbar.structure_mode_active = False
-    elif kwargs.get("preview_mode", False):
-        toolbar.toolbar.edit_mode_active = False
-        toolbar.toolbar.content_mode_active = True
-        toolbar.toolbar.structure_mode_active = False
-    elif kwargs.get("structure_mode", False):
-        toolbar.toolbar.edit_mode_active = False
-        toolbar.toolbar.content_mode_active = False
-        toolbar.toolbar.structure_mode_active = True
-    toolbar.populate()
-    return toolbar
 
 
 class AdminTestCase(CMSTestCase):
@@ -576,8 +535,8 @@ class CMSToolbarTestCase(CMSTestCase):
     def test_pages_menu_item_url_has_no_params(self):
         """
         Create a page and get the toolbar for that page's preview
-        Then check that the page menu item does not have a query string,
-        so as not to trigger filters
+        Then check that the page menu item URL does not have an id parameter
+        in the query string, so as not to trigger filters
         """
         user = self.get_superuser()
         pagecontent = PageVersionFactory(content__template="")
@@ -590,17 +549,12 @@ class CMSToolbarTestCase(CMSTestCase):
         toolbar.post_template_populate()
         menu = toolbar.toolbar.get_menu("admin-menu")
         pagemenu = menu.get_items()[0]
-        self.assertTrue("/en/admin/cms/pagecontent/?language=en", pagemenu.url)
+        self.assertEqual("/en/admin/cms/pagecontent/", pagemenu.url)
 
     def test_cmstoolbar_is_replaced(self):
         """
-        Create a page and check that the PageToolbar has been replaced by the PageAdminToolbar
+        Check that the PageToolbar has been replaced by the PageAdminToolbar
         """
-        user = self.get_superuser()
-        page = create_page(
-            title="Test", template="page.html", language="en", created_by=user
-        )
-        self.request = self.get_page_request(page, user, "/")
         self.assertIn(
             "djangocms_pageadmin.cms_toolbars.PageAdminToolbar", toolbar_pool.toolbars
         )
