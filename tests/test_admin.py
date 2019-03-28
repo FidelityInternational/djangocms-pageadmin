@@ -4,12 +4,14 @@ from unittest.mock import patch
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.test import TestCase, TransactionTestCase
+from django.test.utils import override_settings
 from django.urls import reverse
 
-from cms.api import add_plugin
+from cms.api import add_plugin, create_page
 from cms.models import PageContent, PageUrl
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
+from cms.toolbar_pool import toolbar_pool
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
@@ -17,6 +19,7 @@ from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
 from djangocms_pageadmin.admin import PageContentAdmin
+from djangocms_pageadmin.cms_toolbars import PageAdminToolbar
 from djangocms_pageadmin.test_utils.factories import (
     PageContentWithVersionFactory,
     PageVersionFactory,
@@ -24,6 +27,7 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
+from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
@@ -524,3 +528,33 @@ class RegistrationTestCase(TestCase):
     def test_admin_is_registered(self):
         self.assertIn(PageContent, admin.site._registry)
         self.assertTrue(isinstance(admin.site._registry[PageContent], PageContentAdmin))
+
+
+@override_settings(CMS_PERMISSION=True)
+class CMSToolbarTestCase(CMSTestCase):
+    def test_pages_menu_item_url_has_no_params(self):
+        """
+        Create a page and get the toolbar for that page's preview
+        Then check that the page menu item URL does not have an id parameter
+        in the query string, so as not to trigger filters
+        """
+        user = self.get_superuser()
+        pagecontent = PageVersionFactory(content__template="")
+        toolbar = get_toolbar(
+            pagecontent.content,
+            user=user,
+            toolbar_class=PageAdminToolbar,
+            preview_mode=True,
+        )
+        toolbar.post_template_populate()
+        menu = toolbar.toolbar.get_menu("admin-menu")
+        pagemenu = menu.get_items()[0]
+        self.assertEqual("/en/admin/cms/pagecontent/", pagemenu.url)
+
+    def test_cmstoolbar_is_replaced(self):
+        """
+        Check that the PageToolbar has been replaced by the PageAdminToolbar
+        """
+        self.assertIn(
+            "djangocms_pageadmin.cms_toolbars.PageAdminToolbar", toolbar_pool.toolbars
+        )
