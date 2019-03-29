@@ -74,15 +74,17 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         if path is not None:
             url = obj.page.get_absolute_url(obj.language)
             formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
-            return format_html(
-                "{url}",
-                url=formatted_url,
-            )
+            return format_html("{url}", url=formatted_url)
 
     url.short_description = _("url")
 
     def get_title(self, obj):
-        return format_html("{home}{lock}{title}", home=self.is_home(obj), lock=self.is_locked(obj), title=obj.title)
+        return format_html(
+            "{home}{lock}{title}",
+            home=self.is_home(obj),
+            lock=self.is_locked(obj),
+            title=obj.title,
+        )
 
     get_title.short_description = _("Title")
 
