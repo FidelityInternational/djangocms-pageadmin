@@ -42,7 +42,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def get_list_display(self, request):
         return [
-            "title",
+            "get_title",
             "url",
             "author",
             "state",
@@ -73,15 +73,19 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         path = obj.page.get_path(obj.language)
         if path is not None:
             url = obj.page.get_absolute_url(obj.language)
-            formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
-            return format_html(
-                "{home}{lock}{url}",
-                url=formatted_url,
-                lock=self.locked(obj),
-                home=self.is_home(obj),
-            )
+            return format_html('<a href="{url}">{url}</a>', url=url)
 
     url.short_description = _("url")
+
+    def get_title(self, obj):
+        return format_html(
+            "{home}{lock}{title}",
+            home=self.is_home(obj),
+            lock=self.is_locked(obj),
+            title=obj.title,
+        )
+
+    get_title.short_description = _("title")
 
     def author(self, obj):
         version = self.get_version(obj)
@@ -90,7 +94,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     author.short_description = _("author")
     author.admin_order_field = "versions__author"
 
-    def locked(self, obj):
+    def is_locked(self, obj):
         version = self.get_version(obj)
         if version.state == DRAFT and version_is_locked(version):
             return render_to_string("djangocms_version_locking/admin/locked_icon.html")
