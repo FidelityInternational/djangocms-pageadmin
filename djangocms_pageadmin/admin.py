@@ -73,8 +73,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         path = obj.page.get_path(obj.language)
         if path is not None:
             url = obj.page.get_absolute_url(obj.language)
-            formatted_url = format_html('<a href="{url}">{url}</a>', url=url)
-            return format_html("{url}", url=formatted_url)
+            return format_html('<a href="{url}">{url}</a>', url=url)
 
     url.short_description = _("url")
 
@@ -86,7 +85,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             title=obj.title,
         )
 
-    get_title.short_description = _("Title")
+    get_title.short_description = _("title")
 
     def author(self, obj):
         version = self.get_version(obj)
