@@ -106,6 +106,17 @@ class FiltersTestCase(CMSTestCase):
         self.assertEqual(set(qs_default), set(expected))
         self.assertEqual(set(qs_unpublished), set(expected_unpublished))
 
+    def test_template_filter(self):
+        page_1 = PageContentWithVersionFactory.create_batch(3, template="Some Template")
+
+        base_url = self.get_admin_url(PageContent, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            # en is the default language configured for the site
+            response_default = self.client.get(base_url)
+
+            print(response_default.context["cl"].queryset)
+
 
 class ListActionsTestCase(CMSTestCase):
     def setUp(self):

@@ -31,6 +31,11 @@ HELPER_SETTINGS = {
             },
         ]
     },
+    "CMS_TEMPLATES": (
+        ('fullwidth.html', 'Fullwidth'),
+        ('sidebar_left.html', 'Sidebar Left'),
+        ('sidebar_right.html', 'Sidebar Right')
+    ),
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
 }

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
+from cms.utils.conf import get_cms_setting
 from cms.utils.i18n import get_language_tuple, get_site_language_from_request
 
 from djangocms_versioning.constants import UNPUBLISHED
@@ -54,6 +55,36 @@ class UnpublishedFilter(admin.SimpleListFilter):
             "selected": self.value() is None,
             "query_string": changelist.get_query_string(remove=[self.parameter_name]),
             "display": _("Hide"),
+        }
+        for lookup, title in self.lookup_choices:
+            yield {
+                "selected": self.value() == str(lookup),
+                "query_string": changelist.get_query_string(
+                    {self.parameter_name: lookup}
+                ),
+                "display": title,
+            }
+
+
+class TemplateFilter(admin.SimpleListFilter):
+    title = _("template")
+    parameter_name = "template"
+
+    def lookups(self, request, model_admin):
+        for value, name in get_cms_setting('TEMPLATES'):
+            yield (value, name)
+
+    def queryset(self, request, queryset):
+        template = self.value()
+        if not template:
+            return queryset
+        return queryset.filter(template=template)
+
+    def choices(self, changelist):
+        yield {
+            "selected": self.value() is None,
+            "query_string": changelist.get_query_string(remove=[self.parameter_name]),
+            "display": _("All"),
         }
         for lookup, title in self.lookup_choices:
             yield {
