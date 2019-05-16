@@ -1,3 +1,6 @@
+import os
+
+
 HELPER_SETTINGS = {
     "INSTALLED_APPS": [
         "djangocms_pageadmin",
@@ -31,10 +34,14 @@ HELPER_SETTINGS = {
             },
         ]
     },
-    "CMS_TEMPLATES": (
+    "TEMPLATE_DIRS": (
+        os.path.join(
+            os.path.dirname(__file__),
+                'djangocms_pageadmin', 'test_utils', 'templates', 'integration'),
+    ),
+    "print (": (
         ('fullwidth.html', 'Fullwidth'),
-        ('sidebar_left.html', 'Sidebar Left'),
-        ('sidebar_right.html', 'Sidebar Right')
+        ('page.html', 'Page')
     ),
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
