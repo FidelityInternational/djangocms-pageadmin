@@ -1,22 +1,24 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import force_text, format_html, format_html_join
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import override, ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from cms import api
 from cms.admin.pageadmin import PageContentAdmin as DefaultPageContentAdmin
 from cms.extensions import extension_pool
-from cms.models import PageContent
+from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
@@ -53,15 +55,27 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def get_queryset(self, request):
         """Filter PageContent objects by current site of the request.
         """
+        ctype = ContentType.objects.get_for_model(self.model)
+        url_subquery = PageUrl.objects.filter(
+            language=OuterRef("language"), page=OuterRef("page")
+        )
         queryset = (
             super()
             .get_queryset(request)
             .filter(page__node__site=get_current_site(request))
+            .annotate(_path=Subquery(url_subquery.values("path")[:1]))
         )
-        return queryset.prefetch_related("versions")
+        return queryset.select_related("page").prefetch_related(
+            Prefetch(
+                "versions",
+                queryset=Version.objects.select_related(
+                    "created_by", "versionlock"
+                ).prefetch_related("content"),
+            )
+        )
 
     def get_version(self, obj):
-        return Version.objects.get_for_content(obj)
+        return obj.versions.all()[0]
 
     def state(self, obj):
         version = self.get_version(obj)
@@ -70,9 +84,14 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     state.short_description = _("state")
 
     def url(self, obj):
-        path = obj.page.get_path(obj.language)
-        if path is not None:
-            url = obj.page.get_absolute_url(obj.language)
+        path = obj._path
+        url = None
+        with override(obj.language):
+            if obj.page.is_home:
+                url = reverse("pages-root")
+            if path:
+                url = reverse("pages-details-by-slug", kwargs={"slug": path})
+        if url is not None:
             return format_html('<a href="{url}">{url}</a>', url=url)
 
     url.short_description = _("url")
