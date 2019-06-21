@@ -1,7 +1,6 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -22,6 +21,7 @@ from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
+from djangocms_version_locking.models import VersionLock
 from djangocms_version_locking.helpers import version_is_locked
 from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
@@ -55,10 +55,14 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def get_queryset(self, request):
         """Filter PageContent objects by current site of the request.
         """
-        ctype = ContentType.objects.get_for_model(self.model)
         url_subquery = PageUrl.objects.filter(
             language=OuterRef("language"), page=OuterRef("page")
         )
+        draft_version_lock_subquery = VersionLock.objects.filter(
+            version__content_type=OuterRef("content_type"),
+            version__object_id=OuterRef("object_id"),
+            version__state=DRAFT,
+        ).order_by("-pk")
         queryset = (
             super()
             .get_queryset(request)
@@ -68,9 +72,14 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return queryset.select_related("page").prefetch_related(
             Prefetch(
                 "versions",
-                queryset=Version.objects.select_related(
-                    "created_by", "versionlock"
-                ).prefetch_related("content"),
+                queryset=Version.objects.annotate(
+                    # used by locking
+                    _draft_version_user_id=Subquery(
+                        draft_version_lock_subquery.values("created_by")[:1]
+                    )
+                )
+                .select_related("created_by", "versionlock")
+                .prefetch_related("content"),
             )
         )
 
