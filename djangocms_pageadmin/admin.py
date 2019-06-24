@@ -58,6 +58,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         url_subquery = PageUrl.objects.filter(
             language=OuterRef("language"), page=OuterRef("page")
         )
+        # Collect locked status to handle the requirement that lock
+        # on a draft version dictates the unpublish permission
+        # on a published version
         draft_version_lock_subquery = VersionLock.objects.filter(
             version__content_type=OuterRef("content_type"),
             version__object_id=OuterRef("object_id"),
