@@ -47,6 +47,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         "state",
         "modified_date",
     ]
+    ordering = ['-versions__modified']
     search_fields = ("title",)
 
     def get_list_display(self, request):
