@@ -12,3 +12,4 @@ local.sqlite
 htmlcov/
 .python-version
 docs/_build/
+venv
