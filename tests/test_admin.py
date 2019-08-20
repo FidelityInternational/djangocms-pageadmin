@@ -7,7 +7,7 @@ from django.test import TestCase, TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 
-from cms.api import add_plugin, create_page
+from cms.api import add_plugin
 from cms.models import PageContent, PageUrl
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
@@ -47,6 +47,18 @@ class AdminTestCase(CMSTestCase):
         self.assertRedirects(
             response, "/en/admin/login/?next=/en/admin/cms/pagecontent/"
         )
+
+    def test_ordering_author(self):
+        model = PageContent
+        order = 2
+        author = PageContentAdmin._list_display[order]
+        self.assertEqual(author, 'author', 'Make sure we are checking the correct ordering')
+
+        with self.login_user_context(self.get_superuser()):
+            url = self.get_admin_url(model, "changelist")
+            url = f'{url}?o={order + 1}'
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
 
 
 class FiltersTestCase(CMSTestCase):
