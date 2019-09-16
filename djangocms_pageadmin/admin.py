@@ -31,6 +31,7 @@ from djangocms_versioning.models import Version
 from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
+from .signals import page_copied
 
 
 require_POST = method_decorator(require_POST)
@@ -281,6 +282,12 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         """
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
+    def generate_slug(self, obj):
+        """Generate a slug for page, allows for customization of
+        slug when duplicate is created
+        """
+        return obj.page.get_slug(obj.language)
+
     def duplicate_view(self, request, object_id):
         """Duplicate a specified PageContent.
 
@@ -300,7 +307,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             page_content=obj,
             initial={
                 "site": obj.page.node.site,
-                "slug": obj.page.get_slug(obj.language),
+                "slug": self.generate_slug(obj),
             },
         )
         info = (self.model._meta.app_label, self.model._meta.model_name)
@@ -339,6 +346,12 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                         target_placeholder, language=obj.language
                     )
 
+                page_copied.send(
+                    sender=self.model,
+                    original_page=obj.page,
+                    copied_page=new_page,
+                    language=obj.language
+                )
                 self.message_user(request, _("Page has been duplicated"))
                 return redirect(reverse("admin:{}_{}_changelist".format(*info)))
 
