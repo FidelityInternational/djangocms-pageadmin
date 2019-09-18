@@ -13,6 +13,7 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
 from cms.toolbar_pool import toolbar_pool
 from cms.utils.plugins import downcast_plugins
+from cms.test_utils.util.context_managers import signal_tester
 
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
@@ -30,6 +31,7 @@ from djangocms_pageadmin.test_utils.factories import (
 from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
 from cms.utils.conf import get_cms_setting
+from djangocms_pageadmin.signals import page_copied
 
 parse_html = partial(BeautifulSoup, features="lxml")
 
@@ -437,6 +439,30 @@ class SetHomeViewTransactionTestCase(TransactionTestCase):
 
 
 class DuplicateViewTestCase(CMSTestCase):
+
+    def test_signal_is_issued_when_duplicating_page(self):
+        """When a page is copied there can be reasons for changing the copy.
+        This signal allows you to make changes to the copy or the original when
+        a copy is being made"""
+
+        self.client.force_login(self.get_superuser())
+        pagecontent = PageContentWithVersionFactory(template="page.html")
+
+        with signal_tester(page_copied) as signal:
+            self.client.post(
+                self.get_admin_url(PageContent, "duplicate_content", pagecontent.pk),
+                data={"site": Site.objects.first().pk, "slug": "foo bar"},
+                follow=True,
+            )
+            args, kwargs = signal.calls[0]
+            copied = PageContent._base_manager.last()
+
+            self.assertEquals(signal.call_count, 1)
+            self.assertEquals(kwargs['sender'], PageContent)
+            self.assertEquals(kwargs['original_page'].pk, pagecontent.pk)
+            self.assertEquals(kwargs['copied_page'].pk, copied.pk)
+            self.assertEquals(kwargs['language'], pagecontent.language)
+
     def test_obj_does_not_exist(self):
         with self.login_user_context(self.get_superuser()), patch(
             "django.contrib.messages.add_message"
@@ -534,15 +560,18 @@ class DuplicateViewTestCase(CMSTestCase):
         )
         placeholder = PlaceholderFactory(slot="content", source=pagecontent2)
         add_plugin(placeholder, "TextPlugin", pagecontent2.language, body="Test text")
+
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
                 self.get_admin_url(PageContent, "duplicate_content", pagecontent2.pk),
                 data={"site": Site.objects.first().pk, "slug": "bar"},
                 follow=True,
             )
-        self.assertRedirects(response, self.get_admin_url(PageContent, "changelist"))
+
         new_pagecontent = PageContent._base_manager.latest("pk")
         new_placeholder = new_pagecontent.placeholders.get(slot="content")
+
+        self.assertRedirects(response, self.get_admin_url(PageContent, "changelist"))
         self.assertEqual(PageContent._base_manager.count(), 3)
         self.assertNotEqual(pagecontent2, new_pagecontent)
         self.assertNotEqual(pagecontent2.page, new_pagecontent.page)
