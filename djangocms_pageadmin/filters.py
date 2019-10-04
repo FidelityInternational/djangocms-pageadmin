@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from cms.constants import TEMPLATE_INHERITANCE_MAGIC
 from cms.utils.conf import get_cms_setting
 from cms.utils.i18n import get_language_tuple, get_site_language_from_request
 
@@ -79,23 +78,9 @@ class TemplateFilter(admin.SimpleListFilter):
         template = self.value()
         if not template:
             return queryset
-
-        print("Starting to get tings done")
-        inherit_qs = queryset.filter(template=TEMPLATE_INHERITANCE_MAGIC)
-        filtered_qs = queryset.filter(template=template)
-        inherit_list = [
-            inherit_template.pk for inherit_template in inherit_qs if inherit_template.get_template() == template]
-
-        print("Done")
-
-        return filtered_qs | queryset.filter(pk__in=inherit_list)
-
-        #return queryset.filter(template=template)
+        return queryset.filter(template=template)
 
     def choices(self, changelist):
-
-        # changelist.result_list[0].get_template()
-
         yield {
             "selected": self.value() is None,
             "query_string": changelist.get_query_string(remove=[self.parameter_name]),
