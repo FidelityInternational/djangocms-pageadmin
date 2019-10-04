@@ -4,22 +4,24 @@ from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import force_text, format_html, format_html_join
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import override, ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from cms import api
 from cms.admin.pageadmin import PageContentAdmin as DefaultPageContentAdmin
 from cms.extensions import extension_pool
-from cms.models import PageContent
+from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
+from djangocms_version_locking.models import VersionLock
 from djangocms_version_locking.helpers import version_is_locked
 from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
@@ -38,30 +40,55 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
     list_filter = (LanguageFilter, UnpublishedFilter, TemplateFilter)
+    _list_display = [
+        "get_title",
+        "url",
+        "author",
+        "state",
+        "modified_date",
+    ]
+    ordering = ['-versions__modified']
     search_fields = ("title",)
 
     def get_list_display(self, request):
-        return [
-            "get_title",
-            "url",
-            "author",
-            "state",
-            "modified_date",
-            self._list_actions(request),
-        ]
+        return self._list_display + [self._list_actions(request)]
 
     def get_queryset(self, request):
         """Filter PageContent objects by current site of the request.
         """
+        url_subquery = PageUrl.objects.filter(
+            language=OuterRef("language"), page=OuterRef("page")
+        )
+        # Collect locked status to handle the requirement that lock
+        # on a draft version dictates the unpublish permission
+        # on a published version
+        draft_version_lock_subquery = VersionLock.objects.filter(
+            version__content_type=OuterRef("content_type"),
+            version__object_id=OuterRef("object_id"),
+            version__state=DRAFT,
+        ).order_by("-pk")
         queryset = (
             super()
             .get_queryset(request)
             .filter(page__node__site=get_current_site(request))
+            .annotate(_path=Subquery(url_subquery.values("path")[:1]))
         )
-        return queryset.prefetch_related("versions")
+        return queryset.select_related("page").prefetch_related(
+            Prefetch(
+                "versions",
+                queryset=Version.objects.annotate(
+                    # used by locking
+                    _draft_version_user_id=Subquery(
+                        draft_version_lock_subquery.values("created_by")[:1]
+                    )
+                )
+                .select_related("created_by", "versionlock")
+                .prefetch_related("content"),
+            )
+        )
 
     def get_version(self, obj):
-        return Version.objects.get_for_content(obj)
+        return obj.versions.all()[0]
 
     def state(self, obj):
         version = self.get_version(obj)
@@ -70,9 +97,14 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     state.short_description = _("state")
 
     def url(self, obj):
-        path = obj.page.get_path(obj.language)
-        if path is not None:
-            url = obj.page.get_absolute_url(obj.language)
+        path = obj._path
+        url = None
+        with override(obj.language):
+            if obj.page.is_home:
+                url = reverse("pages-root")
+            if path:
+                url = reverse("pages-details-by-slug", kwargs={"slug": path})
+        if url is not None:
             return format_html('<a href="{url}">{url}</a>', url=url)
 
     url.short_description = _("url")
@@ -92,7 +124,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return version.created_by
 
     author.short_description = _("author")
-    author.admin_order_field = "versions__author"
+    author.admin_order_field = "versions__created_by"
 
     def is_locked(self, obj):
         version = self.get_version(obj)
