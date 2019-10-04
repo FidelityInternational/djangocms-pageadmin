@@ -29,6 +29,7 @@ from djangocms_pageadmin.test_utils.factories import (
 )
 from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
+from cms.utils.conf import get_cms_setting
 
 parse_html = partial(BeautifulSoup, features="lxml")
 
@@ -117,6 +118,25 @@ class FiltersTestCase(CMSTestCase):
 
         self.assertEqual(set(qs_default), set(expected))
         self.assertEqual(set(qs_unpublished), set(expected_unpublished))
+
+    def test_template_filter(self):
+        template_1 = get_cms_setting('TEMPLATES')[0][0]
+        template_2 = get_cms_setting('TEMPLATES')[1][0]
+        template_1_pages = PageContentWithVersionFactory.create_batch(3, template=template_1, language="en")
+        template_2_pages = PageContentWithVersionFactory.create_batch(3, template=template_2, language="en")
+        base_url = self.get_admin_url(PageContent, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            # All / No templates filtered is the default
+            response_default = self.client.get(base_url)
+            # fullwidth template set
+            response_template_1 = self.client.get(base_url + "?template={}".format(template_1))
+            # page template set
+            response_template_2 = self.client.get(base_url + "?template={}".format(template_2))
+
+        self.assertSetEqual(set(response_default.context["cl"].queryset), set(template_1_pages) | set(template_2_pages))
+        self.assertSetEqual(set(response_template_1.context["cl"].queryset), set(template_1_pages))
+        self.assertSetEqual(set(response_template_2.context["cl"].queryset), set(template_2_pages))
 
 
 class ListActionsTestCase(CMSTestCase):

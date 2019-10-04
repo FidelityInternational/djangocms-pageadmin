@@ -1,3 +1,6 @@
+import os
+
+
 HELPER_SETTINGS = {
     "INSTALLED_APPS": [
         "djangocms_pageadmin",
@@ -31,6 +34,11 @@ HELPER_SETTINGS = {
             },
         ]
     },
+    "TEMPLATE_DIRS": (
+        os.path.join(
+            os.path.dirname(__file__),
+                'djangocms_pageadmin', 'test_utils', 'templates', 'integration'),
+    ),
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
 }
