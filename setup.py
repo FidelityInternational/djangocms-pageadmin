@@ -5,10 +5,19 @@ import djangocms_pageadmin
 
 INSTALL_REQUIREMENTS = [
     "Django>=1.11,<2.0",
-    "django-cms>=3.5.0",
+    "django_cms",
     "django-treebeard>=4.3",
+    "djangocms_versioning",
+    "djangocms_version_locking",
 ]
 
+TESTS_REQUIRE = [
+    "djangocms_helper",
+    "djangocms-text-ckeditor",
+    "beautifulsoup4",
+    "factory_boy",
+    "lxml"
+]
 
 setup(
     name="djangocms-pageadmin",
@@ -29,4 +38,10 @@ setup(
     url="https://github.com/FidelityInternational/djangocms-pageadmin",
     license="BSD",
     test_suite="tests.settings.run",
+    tests_require=TESTS_REQUIRE,
+    dependency_links=[
+        "http://github.com/divio/django-cms/tarball/release/4.0.x#egg=django-cms-4.0.0",
+        "http://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
+        "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13"
+    ]
 )
