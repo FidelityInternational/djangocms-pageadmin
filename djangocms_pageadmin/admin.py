@@ -40,17 +40,18 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
     list_filter = (LanguageFilter, UnpublishedFilter)
+    _list_display = [
+        "get_title",
+        "url",
+        "author",
+        "state",
+        "modified_date",
+    ]
+    ordering = ['-versions__modified']
     search_fields = ("title",)
 
     def get_list_display(self, request):
-        return [
-            "get_title",
-            "url",
-            "author",
-            "state",
-            "modified_date",
-            self._list_actions(request),
-        ]
+        return self._list_display + [self._list_actions(request)]
 
     def get_queryset(self, request):
         """Filter PageContent objects by current site of the request.
@@ -123,7 +124,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return version.created_by
 
     author.short_description = _("author")
-    author.admin_order_field = "versions__author"
+    author.admin_order_field = "versions__created_by"
 
     def is_locked(self, obj):
         version = self.get_version(obj)
