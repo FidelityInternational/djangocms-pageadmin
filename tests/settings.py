@@ -39,10 +39,6 @@ HELPER_SETTINGS = {
             os.path.dirname(__file__),
                 'djangocms_pageadmin', 'test_utils', 'templates', 'integration'),
     ),
-    "print (": (
-        ('fullwidth.html', 'Fullwidth'),
-        ('page.html', 'Page')
-    ),
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
 }
