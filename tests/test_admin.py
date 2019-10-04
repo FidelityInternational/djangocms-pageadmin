@@ -127,16 +127,16 @@ class FiltersTestCase(CMSTestCase):
         base_url = self.get_admin_url(PageContent, "changelist")
 
         with self.login_user_context(self.get_superuser()):
-            # All / No templates filterd is the default
+            # All / No templates filtered is the default
             response_default = self.client.get(base_url)
             # fullwidth template set
             response_template_1 = self.client.get(base_url + "?template={}".format(template_1))
             # page template set
             response_template_2 = self.client.get(base_url + "?template={}".format(template_2))
 
-        self.assertEqual(set(response_default.context["cl"].queryset), set(template_1_pages) | set(template_2_pages))
-        self.assertEqual(set(response_template_1.context["cl"].queryset), set(template_1_pages))
-        self.assertEqual(set(response_template_2.context["cl"].queryset), set(template_2_pages))
+        self.assertSetEqual(set(response_default.context["cl"].queryset), set(template_1_pages) | set(template_2_pages))
+        self.assertSetEqual(set(response_template_1.context["cl"].queryset), set(template_1_pages))
+        self.assertSetEqual(set(response_template_2.context["cl"].queryset), set(template_2_pages))
 
 
 class ListActionsTestCase(CMSTestCase):
