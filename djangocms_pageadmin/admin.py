@@ -21,6 +21,7 @@ from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
+from djangocms_moderation.admin_actions import add_item_to_unpublish_collection
 from djangocms_version_locking.models import VersionLock
 from djangocms_version_locking.helpers import version_is_locked
 from djangocms_versioning.admin import VersioningAdminMixin
@@ -31,6 +32,10 @@ from djangocms_versioning.models import Version
 from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
+
+# TODO pageadmin should be usable without moderation and versioning.
+# or atleast it should be usable without moderation.
+USING_MODERATION = True
 
 
 require_POST = method_decorator(require_POST)
@@ -46,6 +51,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         "author",
         "state",
         "modified_date",
+    ]
+    actions = [
+        a for a in [add_item_to_unpublish_collection] if USING_MODERATION
     ]
     ordering = ['-versions__modified']
     search_fields = ("title",)
@@ -93,7 +101,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def state(self, obj):
         version = self.get_version(obj)
         return version.get_state_display()
-
     state.short_description = _("state")
 
     def url(self, obj):
@@ -106,7 +113,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 url = reverse("pages-details-by-slug", kwargs={"slug": path})
         if url is not None:
             return format_html('<a href="{url}">{url}</a>', url=url)
-
     url.short_description = _("url")
 
     def get_title(self, obj):
@@ -116,13 +122,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             lock=self.is_locked(obj),
             title=obj.title,
         )
-
     get_title.short_description = _("title")
 
     def author(self, obj):
         version = self.get_version(obj)
         return version.created_by
-
     author.short_description = _("author")
     author.admin_order_field = "versions__created_by"
 
@@ -140,21 +144,22 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def modified_date(self, obj):
         version = self.get_version(obj)
         return version.modified
-
     modified_date.short_description = _("modified date")
     modified_date.admin_order_field = "versions__modified"
 
     def get_list_actions(self):
-        return [
+        actions = [
             self._set_home_link,
             self._get_preview_link,
             self._get_edit_link,
             self._get_duplicate_link,
-            self._get_unpublish_link,
             self._get_manage_versions_link,
             self._get_basic_settings_link,
             self._get_advanced_settings_link,
         ]
+        if not USING_MODERATION:
+            actions.insert(4, self._get_unpublish_link)
+        return actions
 
     def _get_preview_link(self, obj, request, disabled=False):
         return render_to_string(

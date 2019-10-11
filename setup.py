@@ -9,6 +9,7 @@ INSTALL_REQUIREMENTS = [
     "django-treebeard>=4.3",
     "djangocms_versioning",
     "djangocms_version_locking",
+    "djangocms-moderation"
 ]
 
 TESTS_REQUIRE = [
@@ -42,6 +43,7 @@ setup(
     dependency_links=[
         "http://github.com/divio/django-cms/tarball/release/4.0.x#egg=django-cms-4.0.0",
         "http://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
+        "http://github.com/divio/djangocms-moderation/tarball/release/1.0.x#egg=djangocms-moderation-1.0.22",
         "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13"
     ]
 )
