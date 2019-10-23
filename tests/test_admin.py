@@ -1,5 +1,6 @@
 from functools import partial
 from unittest.mock import patch
+from unittest import skip
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
@@ -143,6 +144,13 @@ class ListActionsTestCase(CMSTestCase):
     def setUp(self):
         self.modeladmin = admin.site._registry[PageContent]
 
+    def test_unpublish_action_is_added(self):
+        """A dropdown item to add pages to a collection for unpublishing is available"""
+        actions = self.modeladmin.actions
+        func = actions[0]
+        self.assertEqual(func.__name__, 'add_item_to_unpublish_collection')
+        self.assertEqual(func.short_description, 'Add items to a collection to unpublish')
+
     def test_preview_link(self):
         pagecontent = PageContentWithVersionFactory()
         func = self.modeladmin._list_actions(self.get_request("/"))
@@ -223,6 +231,7 @@ class ListActionsTestCase(CMSTestCase):
             reverse("admin:cms_pagecontent_set_home_content", args=(version.pk,)),
         )
 
+    @skip('This has been disabled. The ideal would be that this is enabled if moderation is disabled')
     def test_unpublish_link(self):
         version = PageVersionFactory(state=PUBLISHED)
         pagecontent = version.content
