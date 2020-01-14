@@ -36,6 +36,40 @@ from .helpers import proxy_model
 require_POST = method_decorator(require_POST)
 
 
+def duplicate_content(pagecontent, cleaned_data, user):
+    new_page = pagecontent.page.copy(
+        site=cleaned_data["site"],
+        parent_node=pagecontent.page.node.parent,
+        translations=False,
+        permissions=False,
+        extensions=False,
+    )
+
+    new_page_content = api.create_title(
+        page=new_page,
+        language=pagecontent.language,
+        slug=cleaned_data["slug"],
+        path=cleaned_data["path"],
+        title=pagecontent.title,
+        template=pagecontent.template,
+        created_by=user,
+    )
+    new_page.title_cache[pagecontent.language] = new_page_content
+
+    extension_pool.copy_extensions(
+        source_page=pagecontent.page, target_page=new_page, languages=[pagecontent.language]
+    )
+
+    placeholders = pagecontent.get_placeholders()
+    for source_placeholder in placeholders:
+        target_placeholder = new_page_content.placeholders.get(
+            slot=source_placeholder.slot
+        )
+        source_placeholder.copy_plugins(
+            target_placeholder, language=pagecontent.language
+        )
+
+
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
@@ -307,38 +341,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         if request.method == "POST":
             form = DuplicateForm(request.POST, user=request.user, page_content=obj)
             if form.is_valid():
-                new_page = obj.page.copy(
-                    site=form.cleaned_data["site"],
-                    parent_node=obj.page.node.parent,
-                    translations=False,
-                    permissions=False,
-                    extensions=False,
-                )
-
-                new_page_content = api.create_title(
-                    page=new_page,
-                    language=obj.language,
-                    slug=form.cleaned_data["slug"],
-                    path=form.cleaned_data["path"],
-                    title=obj.title,
-                    template=obj.template,
-                    created_by=request.user,
-                )
-                new_page.title_cache[obj.language] = new_page_content
-
-                extension_pool.copy_extensions(
-                    source_page=obj.page, target_page=new_page, languages=[obj.language]
-                )
-
-                placeholders = obj.get_placeholders()
-                for source_placeholder in placeholders:
-                    target_placeholder = new_page_content.placeholders.get(
-                        slot=source_placeholder.slot
-                    )
-                    source_placeholder.copy_plugins(
-                        target_placeholder, language=obj.language
-                    )
-
+                duplicate_content(obj, form.cleaned_data, user)
                 self.message_user(request, _("Page has been duplicated"))
                 return redirect(reverse("admin:{}_{}_changelist".format(*info)))
 
