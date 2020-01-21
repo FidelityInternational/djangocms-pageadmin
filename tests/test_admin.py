@@ -49,6 +49,22 @@ class AdminTestCase(CMSTestCase):
             response, "/en/admin/login/?next=/en/admin/cms/pagecontent/"
         )
 
+    def test_add_pagecontent_keeps_url(self):
+        '''Adding a pagecontent should give you a pageurl path'''
+        page1_data = self.get_new_page_data()
+        page2_data = self.get_new_page_data()
+        pagecontent_add = self.get_page_add_uri('en')
+        self.client.force_login(self.get_superuser())
+        self.client.post(pagecontent_add, page1_data)
+        self.client.post(pagecontent_add, page2_data)
+
+        # the first page is home and doesn't have a path by default
+        PageContent._original_manager.get(title=page1_data['title'])
+        page2 = PageContent._original_manager.get(title=page2_data['title'])
+
+        url = page2.page.get_urls()[0]
+        self.assertEqual(url.path, page2_data['slug'])
+
     def test_ordering_author(self):
         model = PageContent
         order = 2
