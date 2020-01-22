@@ -1,3 +1,9 @@
+# test libraries
+coverage
+pyflakes>=2.1.1
+flake8
+isort
+mock
 factory_boy
 beautifulsoup4
 lxml
