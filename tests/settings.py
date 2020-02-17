@@ -37,7 +37,7 @@ HELPER_SETTINGS = {
     "TEMPLATE_DIRS": (
         os.path.join(
             os.path.dirname(__file__),
-                'djangocms_pageadmin', 'test_utils', 'templates', 'integration'),
+            'djangocms_pageadmin', 'test_utils', 'templates', 'integration'),
     ),
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
