@@ -12,7 +12,6 @@ from cms.models import PageContent, PageUrl
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
 from cms.toolbar_pool import toolbar_pool
-from cms.utils.conf import get_cms_setting
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
@@ -30,6 +29,7 @@ from djangocms_pageadmin.test_utils.factories import (
 )
 from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
+from cms.utils.conf import get_cms_setting
 
 parse_html = partial(BeautifulSoup, features="lxml")
 
@@ -57,7 +57,7 @@ class AdminTestCase(CMSTestCase):
 
         with self.login_user_context(self.get_superuser()):
             url = self.get_admin_url(model, "changelist")
-            url = '{url}?o={order}'.format(url=url, order=(order + 1))
+            url = f'{url}?o={order + 1}'
             response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
