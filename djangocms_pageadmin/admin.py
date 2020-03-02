@@ -281,6 +281,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         """
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
+    @transaction.atomic
     def duplicate_view(self, request, object_id):
         """Duplicate a specified PageContent.
 
@@ -332,7 +333,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
                 placeholders = obj.get_placeholders()
                 for source_placeholder in placeholders:
-                    target_placeholder = new_page_content.placeholders.get(
+                    target_placeholder, created = new_page_content.placeholders.get_or_create(
                         slot=source_placeholder.slot
                     )
                     source_placeholder.copy_plugins(

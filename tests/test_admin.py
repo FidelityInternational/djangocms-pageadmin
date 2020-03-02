@@ -488,8 +488,11 @@ class DuplicateViewTestCase(CMSTestCase):
         self.assertEqual(form.errors["slug"], ["Slug must not be empty."])
 
     def test_post(self):
+        """the slot for content is always there, the slot for navigation needs
+        to be created"""
         pagecontent = PageContentWithVersionFactory(template="page.html")
         placeholder = PlaceholderFactory(slot="content", source=pagecontent)
+        placeholder = PlaceholderFactory(slot="navigation", source=pagecontent)
         add_plugin(placeholder, "TextPlugin", pagecontent.language, body="Test text")
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
