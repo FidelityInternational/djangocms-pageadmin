@@ -40,8 +40,8 @@ setup(
     test_suite="tests.settings.run",
     tests_require=TESTS_REQUIRE,
     dependency_links=[
-        "http://github.com/divio/django-cms/tarball/release/4.0.x#egg=django-cms-4.0.0",
-        "http://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
-        "http://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking-0.0.13"  # noqa
+        "https://github.com/divio/django-cms/tarball/release/4.0.x#egg=django-cms-4.0.0",
+        "https://github.com/divio/djangocms-versioning/tarball/master#egg=djangocms-versioning-0.0.23",
+        "https://github.com/jonathan-s/djangocms-version-locking/tarball/setup-django22#egg=djangocms-version-locking-0.0.13", # noqa
     ]
 )
