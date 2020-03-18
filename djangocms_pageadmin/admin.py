@@ -186,7 +186,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def _get_duplicate_link(self, obj, request, disabled=False):
         url = reverse(
-            "admin:{app}_{model}_duplicate_content".format(
+            "admin:{app}_{model}_duplicate".format(
                 app=self.model._meta.app_label, model=self.model._meta.model_name
             ),
             args=(obj.pk,),
@@ -348,7 +348,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             form=form,
             object_id=object_id,
             duplicate_url=reverse(
-                "admin:{}_{}_duplicate_content".format(*info), args=(obj.pk,)
+                "admin:{}_{}_duplicate".format(*info), args=(obj.pk,)
             ),
             back_url=reverse("admin:{}_{}_changelist".format(*info)),
         )
@@ -395,18 +395,21 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
-        return [
+        # we replace the duplicate with our function.
+        old_urls = [v for v in super().get_urls() if 'duplicate' not in str(v.name)]
+        new_urls = [
             url(
                 r"^(.+)/duplicate-content/$",
                 self.admin_site.admin_view(self.duplicate_view),
-                name="{}_{}_duplicate_content".format(*info),
+                name="{}_{}_duplicate".format(*info),
             ),
             url(
                 r"^(.+)/set-home-content/$",
                 self.admin_site.admin_view(self.set_home_view),
                 name="{}_{}_set_home_content".format(*info),
             ),
-        ] + super().get_urls()
+        ]
+        return new_urls + old_urls
 
     class Media:
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}

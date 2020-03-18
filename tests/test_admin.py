@@ -143,6 +143,19 @@ class ListActionsTestCase(CMSTestCase):
     def setUp(self):
         self.modeladmin = admin.site._registry[PageContent]
 
+    def test_duplicate_url_is_replaced(self):
+        """
+        The old url /duplicate/ has been removed. But cms_pagecontent_duplicate
+        still exists.
+        """
+
+        urls = self.modeladmin.get_urls()
+        duplicate_url = [u for u in urls if '/duplicate/' in u.regex.pattern]
+        name_url = [u for u in urls if 'cms_pagecontent_duplicate' == u.name]
+
+        self.assertEqual(len(duplicate_url), 0)
+        self.assertEqual(len(name_url), 1)
+
     def test_preview_link(self):
         pagecontent = PageContentWithVersionFactory()
         func = self.modeladmin._list_actions(self.get_request("/"))
@@ -207,7 +220,7 @@ class ListActionsTestCase(CMSTestCase):
         self.assertEqual(element["title"], "Duplicate")
         self.assertEqual(
             element["href"],
-            reverse("admin:cms_pagecontent_duplicate_content", args=(version.pk,)),
+            reverse("admin:cms_pagecontent_duplicate", args=(version.pk,)),
         )
 
     def test_set_home_link(self):
@@ -442,7 +455,7 @@ class DuplicateViewTestCase(CMSTestCase):
             "django.contrib.messages.add_message"
         ) as mock:
             response = self.client.get(
-                self.get_admin_url(PageContent, "duplicate_content", "foo")
+                self.get_admin_url(PageContent, "duplicate", "foo")
             )
         self.assertRedirects(response, "/en/admin/", target_status_code=302)
         self.assertEqual(mock.call_count, 1)
@@ -456,7 +469,7 @@ class DuplicateViewTestCase(CMSTestCase):
         pagecontent = PageContentWithVersionFactory()
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(
-                self.get_admin_url(PageContent, "duplicate_content", pagecontent.pk)
+                self.get_admin_url(PageContent, "duplicate", pagecontent.pk)
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PageContent._base_manager.count(), 1)
@@ -465,7 +478,7 @@ class DuplicateViewTestCase(CMSTestCase):
         pagecontent = PageContentWithVersionFactory()
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
-                self.get_admin_url(PageContent, "duplicate_content", pagecontent.pk),
+                self.get_admin_url(PageContent, "duplicate", pagecontent.pk),
                 data={"slug": ""},
             )
             form = response.context["form"]
@@ -478,7 +491,7 @@ class DuplicateViewTestCase(CMSTestCase):
         pagecontent = PageContentWithVersionFactory()
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
-                self.get_admin_url(PageContent, "duplicate_content", pagecontent.pk),
+                self.get_admin_url(PageContent, "duplicate", pagecontent.pk),
                 data={"site": Site.objects.first().pk, "slug": "£"},
             )
             form = response.context["form"]
@@ -492,11 +505,11 @@ class DuplicateViewTestCase(CMSTestCase):
         to be created"""
         pagecontent = PageContentWithVersionFactory(template="page.html")
         placeholder = PlaceholderFactory(slot="content", source=pagecontent)
-        placeholder = PlaceholderFactory(slot="navigation", source=pagecontent)
+        PlaceholderFactory(slot="navigation", source=pagecontent)
         add_plugin(placeholder, "TextPlugin", pagecontent.language, body="Test text")
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
-                self.get_admin_url(PageContent, "duplicate_content", pagecontent.pk),
+                self.get_admin_url(PageContent, "duplicate", pagecontent.pk),
                 data={"site": Site.objects.first().pk, "slug": "foo bar"},
                 follow=True,
             )
@@ -511,6 +524,7 @@ class DuplicateViewTestCase(CMSTestCase):
             new_pagecontent.page.get_slug(new_pagecontent.language), "foo-bar"
         )
         new_plugins = list(downcast_plugins(new_placeholder.get_plugins_list()))
+
         self.assertEqual(len(new_plugins), 1)
         self.assertEqual(new_plugins[0].plugin_type, "TextPlugin")
         self.assertEqual(new_plugins[0].body, "Test text")
@@ -539,7 +553,7 @@ class DuplicateViewTestCase(CMSTestCase):
         add_plugin(placeholder, "TextPlugin", pagecontent2.language, body="Test text")
         with self.login_user_context(self.get_superuser()):
             response = self.client.post(
-                self.get_admin_url(PageContent, "duplicate_content", pagecontent2.pk),
+                self.get_admin_url(PageContent, "duplicate", pagecontent2.pk),
                 data={"site": Site.objects.first().pk, "slug": "bar"},
                 follow=True,
             )
