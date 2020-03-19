@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.html import force_text, format_html, format_html_join
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import override, ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
@@ -31,6 +31,12 @@ from djangocms_versioning.models import Version
 from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
+
+
+try:
+    from django.utils.html import force_text
+except ImportError:
+    from django.utils.encoding import force_text
 
 
 require_POST = method_decorator(require_POST)

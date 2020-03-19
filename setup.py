@@ -4,7 +4,7 @@ import djangocms_pageadmin
 
 
 INSTALL_REQUIREMENTS = [
-    "Django>=1.11,<2.0",
+    "Django>=1.11,<3.0",
     "django_cms",
     "django-treebeard>=4.3",
     "djangocms_versioning",
