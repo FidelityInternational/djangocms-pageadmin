@@ -333,6 +333,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
                 placeholders = obj.get_placeholders()
                 for source_placeholder in placeholders:
+                    # Keep all placeholders even if they are not in the template anymore to ensure the data is kept,
+                    # keeping only placeholders from rescanning the template would not keep any legacy content
+                    # which could in theory be remapped repaired at a later date
                     target_placeholder, created = new_page_content.placeholders.get_or_create(
                         slot=source_placeholder.slot
                     )
