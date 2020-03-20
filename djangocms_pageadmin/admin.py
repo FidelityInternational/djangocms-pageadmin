@@ -6,7 +6,6 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
-from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -14,9 +13,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import override, ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from cms import api
 from cms.admin.pageadmin import PageContentAdmin as DefaultPageContentAdmin
-from cms.extensions import extension_pool
 from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
@@ -29,7 +26,6 @@ from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
 from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
-from .forms import DuplicateForm
 from .helpers import proxy_model
 
 
@@ -287,84 +283,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         """
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
-    @transaction.atomic
-    def duplicate_view(self, request, object_id):
-        """Duplicate a specified PageContent.
-
-        Create a new page with content copied from provided PageContent.
-
-        :param request: Http request
-        :param object_id: PageContent ID (as a string)
-        """
-        obj = self.get_object(request, unquote(object_id))
-        if obj is None:
-            return self._get_obj_does_not_exist_redirect(
-                request, self.model._meta, object_id
-            )
-
-        form = DuplicateForm(
-            user=request.user,
-            page_content=obj,
-            initial={
-                "site": obj.page.node.site,
-                "slug": obj.page.get_slug(obj.language),
-            },
-        )
-        info = (self.model._meta.app_label, self.model._meta.model_name)
-        if request.method == "POST":
-            form = DuplicateForm(request.POST, user=request.user, page_content=obj)
-            if form.is_valid():
-                new_page = obj.page.copy(
-                    site=form.cleaned_data["site"],
-                    parent_node=obj.page.node.parent,
-                    translations=False,
-                    permissions=False,
-                    extensions=False,
-                )
-
-                new_page_content = api.create_title(
-                    page=new_page,
-                    language=obj.language,
-                    slug=form.cleaned_data["slug"],
-                    path=form.cleaned_data["path"],
-                    title=obj.title,
-                    template=obj.template,
-                    created_by=request.user,
-                )
-                new_page.title_cache[obj.language] = new_page_content
-
-                extension_pool.copy_extensions(
-                    source_page=obj.page, target_page=new_page, languages=[obj.language]
-                )
-
-                placeholders = obj.get_placeholders()
-                for source_placeholder in placeholders:
-                    # Keep all placeholders even if they are not in the template anymore to ensure the data is kept,
-                    # keeping only placeholders from rescanning the template would not keep any legacy content
-                    # which could in theory be remapped repaired at a later date
-                    target_placeholder, created = new_page_content.placeholders.get_or_create(
-                        slot=source_placeholder.slot
-                    )
-                    source_placeholder.copy_plugins(
-                        target_placeholder, language=obj.language
-                    )
-
-                self.message_user(request, _("Page has been duplicated"))
-                return redirect(reverse("admin:{}_{}_changelist".format(*info)))
-
-        context = dict(
-            obj=obj,
-            form=form,
-            object_id=object_id,
-            duplicate_url=reverse(
-                "admin:{}_{}_duplicate".format(*info), args=(obj.pk,)
-            ),
-            back_url=reverse("admin:{}_{}_changelist".format(*info)),
-        )
-        return render(
-            request, "djangocms_pageadmin/admin/duplicate_confirmation.html", context
-        )
-
     @require_POST
     @transaction.atomic
     def set_home_view(self, request, object_id):
@@ -404,14 +322,8 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
-        # we replace the duplicate with our function.
-        old_urls = [v for v in super().get_urls() if 'duplicate' not in str(v.name)]
+        old_urls = super().get_urls()
         new_urls = [
-            url(
-                r"^(.+)/duplicate-content/$",
-                self.admin_site.admin_view(self.duplicate_view),
-                name="{}_{}_duplicate".format(*info),
-            ),
             url(
                 r"^(.+)/set-home-content/$",
                 self.admin_site.admin_view(self.set_home_view),
