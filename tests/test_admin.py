@@ -1,6 +1,7 @@
 from functools import partial
 from unittest.mock import patch
 
+import django
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.test import TestCase, TransactionTestCase
@@ -32,6 +33,9 @@ from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
+
+version = list(map(int, django.__version__.split('.')))
+GTE_DJ20 = version[0] >= 2
 
 
 class AdminTestCase(CMSTestCase):
@@ -150,7 +154,11 @@ class ListActionsTestCase(CMSTestCase):
         """
 
         urls = self.modeladmin.get_urls()
-        duplicate_url = [u for u in urls if '/duplicate/' in u.regex.pattern]
+        if GTE_DJ20:
+            # this is a fallback for django 1.11 which uses a different url structure.
+            duplicate_url = [u for u in urls if '/duplicate/' in u.pattern.regex.pattern]
+        else:
+            duplicate_url = [u for u in urls if '/duplicate/' in u.regex.pattern]
         name_url = [u for u in urls if 'cms_pagecontent_duplicate' == u.name]
 
         self.assertEqual(len(duplicate_url), 0)
