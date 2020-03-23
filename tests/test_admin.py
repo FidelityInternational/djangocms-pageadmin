@@ -615,3 +615,31 @@ class CMSToolbarTestCase(CMSTestCase):
         self.assertIn(
             "djangocms_pageadmin.cms_toolbars.PageAdminToolbar", toolbar_pool.toolbars
         )
+
+    def test_submenu_does_not_cause_crash_in_change_admin_menu(self):
+        """
+        change_admin_menu should handle SubMenus as the first item.
+        """
+        # Earlier versions of change_admin_menu assumed every menu item
+        # had a url attribute, which is not true for SubMenu.
+        user = self.get_superuser()
+        pagecontent = PageVersionFactory(content__template="")
+        toolbar = get_toolbar(
+            pagecontent.content,
+            user=user,
+            toolbar_class=PageAdminToolbar,
+            preview_mode=True,
+        )
+        menu = toolbar.toolbar.get_menu("admin-menu")
+        menu.get_or_create_menu(
+            key='sub_menu_key',
+            verbose_name='My sub-menu',
+            position=0,
+        )
+
+        try:
+            toolbar.change_admin_menu()
+        except AttributeError as e:
+            if e.args and e.args[0] == "'SubMenu' object has no attribute 'url'":
+                self.fail('change_admin_menu should handle SubMenu as the first item.')
+            raise
