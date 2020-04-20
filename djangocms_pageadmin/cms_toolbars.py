@@ -20,7 +20,8 @@ class PageAdminToolbar(PageToolbar):
         super().change_admin_menu()
         menu = self.toolbar.get_menu(ADMIN_MENU_IDENTIFIER)
         item = menu.items[0]
-        if item and item.url and "admin/cms/pagecontent/" in item.url:
+        # Menu items like SubMenu that have no url attribute:
+        if item and getattr(item, 'url', None) and "admin/cms/pagecontent/" in item.url:
             url = admin_reverse("cms_pagecontent_changelist")  # cms page admin
             item.url = url
 
