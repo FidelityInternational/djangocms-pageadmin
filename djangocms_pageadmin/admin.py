@@ -285,6 +285,13 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def changelist_view(self, request, extra_context=None):
         """Ignore default cms' implementation and use ModelAdmin instead.
         """
+        # The standard Pages menu for the PageContent model as provided by the CMS returns a selected item.
+        # This works because that view has no filters. PageAdmin has filters, so this causes unwanted filtering.
+        # Thus replace the PageToolbar with to remove the filter parameters from the URL
+        if 'page_id' in request.GET:
+            request.GET = request.GET.copy()
+            del(request.GET['page_id'])
+
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
     @transaction.atomic
