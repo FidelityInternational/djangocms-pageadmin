@@ -27,7 +27,6 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
-from djangocms_pageadmin.test_utils.helpers import get_toolbar
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
