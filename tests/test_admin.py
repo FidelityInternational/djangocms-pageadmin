@@ -12,7 +12,6 @@ from cms.api import add_plugin
 from cms.models import PageContent, PageUrl
 from cms.test_utils.testcases import CMSTestCase
 from cms.toolbar.utils import get_object_preview_url
-from cms.toolbar_pool import toolbar_pool
 from cms.utils.conf import get_cms_setting
 from cms.utils.plugins import downcast_plugins
 
@@ -21,7 +20,6 @@ from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
 from djangocms_pageadmin.admin import PageContentAdmin
-from djangocms_pageadmin.cms_toolbars import PageAdminToolbar
 from djangocms_pageadmin.test_utils.factories import (
     PageContentWithVersionFactory,
     PageVersionFactory,
@@ -588,58 +586,26 @@ class RegistrationTestCase(TestCase):
 
 
 @override_settings(CMS_PERMISSION=True)
-class CMSToolbarTestCase(CMSTestCase):
-    def test_pages_menu_item_url_has_no_params(self):
+class CMSPageToolbarTestCase(CMSTestCase):
+    def test_cms_page_toolbar_pages_link_doesnt_filter_the_page_list_by_page_id(self):
         """
-        Create a page and get the toolbar for that page's preview
-        Then check that the page menu item URL does not have an id parameter
-        in the query string, so as not to trigger filters
-        """
-        user = self.get_superuser()
-        pagecontent = PageVersionFactory(content__template="")
-        toolbar = get_toolbar(
-            pagecontent.content,
-            user=user,
-            toolbar_class=PageAdminToolbar,
-            preview_mode=True,
-        )
-        toolbar.post_template_populate()
-        menu = toolbar.toolbar.get_menu("admin-menu")
-        pagemenu = menu.get_items()[0]
-        self.assertEqual("/en/admin/cms/pagecontent/", pagemenu.url)
+        The PageToolbar "Pages" link sends a parameter "page_id=X" which filters the page admin changelist.
+        This is not desired behaviour for this package, the page_id for the standard cms is designed to allow the page
+        tree to show a tree from a page i.e. expand any children below it. The page admin for this package does not use
+        a page tree so this functionality breaks the admin changelist by only showing the page with the matching id.
 
-    def test_cmstoolbar_is_replaced(self):
+        The PageAdmin page list should not be affected by the page_id parameter.
         """
-        Check that the PageToolbar has been replaced by the PageAdminToolbar
-        """
-        self.assertIn(
-            "djangocms_pageadmin.cms_toolbars.PageAdminToolbar", toolbar_pool.toolbars
-        )
+        template_1 = get_cms_setting('TEMPLATES')[0][0]
+        pages = PageContentWithVersionFactory.create_batch(6, template=template_1, language="en")
+        base_url = self.get_admin_url(PageContent, "changelist")
+        simulated_toolbar_pages_link = "/en/admin/cms/pagecontent/?language=en&page_id=1"
 
-    def test_submenu_does_not_cause_crash_in_change_admin_menu(self):
-        """
-        change_admin_menu should handle SubMenus as the first item.
-        """
-        # Earlier versions of change_admin_menu assumed every menu item
-        # had a url attribute, which is not true for SubMenu.
-        user = self.get_superuser()
-        pagecontent = PageVersionFactory(content__template="")
-        toolbar = get_toolbar(
-            pagecontent.content,
-            user=user,
-            toolbar_class=PageAdminToolbar,
-            preview_mode=True,
-        )
-        menu = toolbar.toolbar.get_menu("admin-menu")
-        menu.get_or_create_menu(
-            key='sub_menu_key',
-            verbose_name='My sub-menu',
-            position=0,
-        )
+        with self.login_user_context(self.get_superuser()):
+            # Default changelist link
+            response = self.client.get(base_url)
+            # Toolbar pages link simulation
+            response_with_page_id = self.client.get(simulated_toolbar_pages_link)
 
-        try:
-            toolbar.change_admin_menu()
-        except AttributeError as e:
-            if e.args and e.args[0] == "'SubMenu' object has no attribute 'url'":
-                self.fail('change_admin_menu should handle SubMenu as the first item.')
-            raise
+        self.assertSetEqual(set(response.context["cl"].queryset), set(pages))
+        self.assertSetEqual(set(response_with_page_id.context["cl"].queryset), set(pages))

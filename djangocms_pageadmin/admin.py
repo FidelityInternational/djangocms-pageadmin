@@ -290,7 +290,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         # Thus replace the PageToolbar with to remove the filter parameters from the URL
         if 'page_id' in request.GET:
             request.GET = request.GET.copy()
-            del(request.GET['page_id'])
+            #del(request.GET['page_id'])
 
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
