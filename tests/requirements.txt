@@ -7,7 +7,6 @@ mock
 factory_boy
 beautifulsoup4
 lxml
-djangocms-text-ckeditor
 django-classy-tags<2.0.0
 django-sekizai<2.0.0
 https://github.com/divio/djangocms-text-ckeditor/tarball/support/4.0.x#egg=djangocms-text-ckeditor
