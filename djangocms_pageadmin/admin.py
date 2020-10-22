@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
@@ -14,8 +13,6 @@ from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
 from django.utils.translation import override, ugettext_lazy as _
 from django.views.decorators.http import require_POST
-
-import os
 
 from cms import api
 from cms.admin.pageadmin import PageContentAdmin as DefaultPageContentAdmin
