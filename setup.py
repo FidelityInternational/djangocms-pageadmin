@@ -4,17 +4,9 @@ import djangocms_pageadmin
 
 
 INSTALL_REQUIREMENTS = [
-    "Django>=1.11,<3.0",
+    "Django>=1.11,<3.3",
     "django_cms",
     "django-treebeard>=4.3",
-]
-
-TESTS_REQUIRE = [
-    "djangocms_helper",
-    "djangocms-text-ckeditor",
-    "beautifulsoup4",
-    "factory_boy",
-    "lxml"
 ]
 
 setup(
@@ -36,5 +28,4 @@ setup(
     url="https://github.com/FidelityInternational/djangocms-pageadmin",
     license="BSD",
     test_suite="tests.settings.run",
-    tests_require=TESTS_REQUIRE,
 )
