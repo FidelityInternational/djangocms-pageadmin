@@ -2,7 +2,6 @@ from functools import partial
 from unittest import skip
 from unittest.mock import patch
 
-import django
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.test import TestCase, TransactionTestCase
@@ -21,6 +20,7 @@ from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
 
 from djangocms_pageadmin.admin import PageContentAdmin
+from djangocms_pageadmin.compat import DJANGO_GTE_30
 from djangocms_pageadmin.test_utils.factories import (
     PageContentWithVersionFactory,
     PageVersionFactory,
@@ -31,9 +31,6 @@ from djangocms_pageadmin.test_utils.factories import (
 
 
 parse_html = partial(BeautifulSoup, features="lxml")
-
-version = list(map(int, django.__version__.split('.')))
-GTE_DJ20 = version[0] >= 2
 
 
 class AdminTestCase(CMSTestCase):
@@ -152,11 +149,7 @@ class ListActionsTestCase(CMSTestCase):
         """
 
         urls = self.modeladmin.get_urls()
-        if GTE_DJ20:
-            # this is a fallback for django 1.11 which uses a different url structure.
-            duplicate_url = [u for u in urls if '/duplicate/' in u.pattern.regex.pattern]
-        else:
-            duplicate_url = [u for u in urls if '/duplicate/' in u.regex.pattern]
+        duplicate_url = [u for u in urls if '/duplicate/' in u.pattern.regex.pattern]
         name_url = [u for u in urls if 'cms_pagecontent_duplicate' == u.name]
 
         self.assertEqual(len(duplicate_url), 0)
@@ -468,10 +461,20 @@ class DuplicateViewTestCase(CMSTestCase):
         self.assertRedirects(response, "/en/admin/", target_status_code=302)
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(mock.call_args[0][1], 30)  # warning level
-        self.assertEqual(
-            mock.call_args[0][2],
-            'page content with ID "foo" doesn\'t exist. Perhaps it was deleted?',
-        )
+
+        # Django < 3 support
+        # django 3 contains text formatting changes
+        if not DJANGO_GTE_30:
+            self.assertEqual(
+                mock.call_args[0][2],
+                'page content with ID "foo" doesn\'t exist. Perhaps it was deleted?',
+            )
+        # django >= 3 support
+        else:
+            self.assertEqual(
+                mock.call_args[0][2],
+                'page content with ID “foo” doesn’t exist. Perhaps it was deleted?',
+            )
 
     def test_get(self):
         pagecontent = PageContentWithVersionFactory()
