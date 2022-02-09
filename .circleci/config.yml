@@ -92,9 +92,9 @@ jobs:
 
 
   flake8:
-    <<: *py38default
+    <<: *py39default
   isort:
-    <<: *py38default
+    <<: *py39default
 
   py37-dj22-sqlite-cms40:
     <<: *py37default
@@ -121,10 +121,10 @@ workflows:
       - py39_base
       - flake8:
           requires:
-            - py38_base
+            - py39_base
       - isort:
           requires:
-            - py38_base
+            - py39_base
 
       - py37-dj22-sqlite-cms40:
           requires:
