@@ -110,7 +110,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             if path:
                 url = reverse("pages-details-by-slug", kwargs={"slug": path})
         if url is not None:
-            return format_html('<a href="{url}">{url}</a>', url=url)
+            return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
 
     url.short_description = _("url")
 
@@ -167,7 +167,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def _get_preview_link(self, obj, request, disabled=False):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/preview.html",
-            {"url": get_object_preview_url(obj), "disabled": disabled},
+            {"url": get_object_preview_url(obj), "disabled": disabled, "keepsideframe": False},
         )
 
     def _get_edit_link(self, obj, request, disabled=False):
