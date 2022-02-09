@@ -1,4 +1,3 @@
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
@@ -8,10 +7,10 @@ from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
-from django.utils.translation import override, ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _, override
 from django.views.decorators.http import require_POST
 
 from cms import api
@@ -34,9 +33,9 @@ from .helpers import proxy_model
 
 
 try:
-    from django.utils.html import force_text
+    from django.utils.html import force_str
 except ImportError:
-    from django.utils.encoding import force_text
+    from django.utils.encoding import force_str
 
 
 require_POST = method_decorator(require_POST)
@@ -390,7 +389,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
         if not page.is_potential_home():
             return HttpResponseBadRequest(
-                force_text(_("The page is not eligible to be home."))
+                force_str(_("The page is not eligible to be home."))
             )
 
         new_home_tree, old_home_tree = page.set_as_homepage(request.user)
@@ -418,12 +417,12 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         # we replace the duplicate with our function.
         old_urls = [v for v in super().get_urls() if 'duplicate' not in str(v.name)]
         new_urls = [
-            url(
+            re_path(
                 r"^(.+)/duplicate-content/$",
                 self.admin_site.admin_view(self.duplicate_view),
                 name="{}_{}_duplicate".format(*info),
             ),
-            url(
+            re_path(
                 r"^(.+)/set-home-content/$",
                 self.admin_site.admin_view(self.set_home_view),
                 name="{}_{}_set_home_content".format(*info),

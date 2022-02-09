@@ -18,6 +18,7 @@ class DisableMigrations(object):
 
 
 HELPER_SETTINGS = {
+    "SECRET_KEY": "djangocmspageadmintestsuitekey",
     "INSTALLED_APPS": [
         "djangocms_pageadmin",
         "djangocms_text_ckeditor",
