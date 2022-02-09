@@ -10,7 +10,6 @@ pyflakes>=2.1.1
 
 # Unreleased django-cms 4.0 compatible packages
 https://github.com/django-cms/django-cms/tarball/develop-4#egg=django-cms
-https://github.com/divio/djangocms-text-ckeditor/tarball/support/4.0.x#egg=djangocms-text-ckeditor
-https://github.com/Aiky30/djangocms-text-ckeditor/archive/feature/cms-40-django-30-support-.zip
 https://github.com/django-cms/djangocms-versioning/tarball/master#egg=djangocms-versioning
+https://github.com/divio/djangocms-text-ckeditor/tarball/support/4.0.x#egg=djangocms-text-ckeditor
 https://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking
