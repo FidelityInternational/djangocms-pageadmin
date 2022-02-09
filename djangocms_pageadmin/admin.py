@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
-from django.utils.translation import override, gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, override
 from django.views.decorators.http import require_POST
 
 from cms import api
