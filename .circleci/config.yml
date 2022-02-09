@@ -135,3 +135,13 @@ workflows:
       - py39-dj22-sqlite-cms40:
           requires:
             - py39_base
+
+      - py37-dj32-sqlite-cms40:
+          requires:
+            - py37_base
+      - py38-dj32-sqlite-cms40:
+          requires:
+            - py38_base
+      - py39-dj32-sqlite-cms40:
+          requires:
+            - py39_base
