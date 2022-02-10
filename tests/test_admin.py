@@ -584,6 +584,39 @@ class DuplicateViewTestCase(CMSTestCase):
         self.assertEqual(new_plugins[0].body, "Test text")
 
 
+class ChangelistSideframeControlsTestCase(CMSTestCase):
+    def setUp(self):
+        self.modeladmin = admin.site._registry[PageContent]
+
+    def test_changelist_url_link_doesnt_open_in_sideframe(self):
+        """
+        When clicking on the pages url link the sideframe is closed
+        and the page link is followed
+        """
+        pagecontent = PageContentWithVersionFactory()
+        pagecontent._path = "/some-url"
+        url_markup = self.modeladmin.url(pagecontent)
+
+        # The url link should close the sideframe when selected
+        self.assertIn("js-page-admin-close-sideframe", url_markup)
+        self.assertNotIn("js-page-admin-keep-sideframe", url_markup)
+
+    def test_preview_link_doesnt_open_in_sideframe(self):
+        """
+        When clicking on the pages preview link the sideframe is closed
+        and the page link is followed
+        """
+        pagecontent = PageContentWithVersionFactory()
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        response = func(pagecontent)
+        soup = parse_html(response)
+        element = soup.find("a", {"class": "cms-page-admin-action-preview"})
+
+        # The preview link should close the sideframe when selected
+        self.assertIn("js-page-admin-close-sideframe", element.attrs["class"])
+        self.assertNotIn("js-page-admin-keep-sideframe", element.attrs["class"])
+
+
 class RegistrationTestCase(TestCase):
     def test_admin_is_registered(self):
         self.assertIn(PageContent, admin.site._registry)
