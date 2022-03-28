@@ -2,23 +2,19 @@
 {% load i18n cms_static static %}
 
 {% block admin_change_list_document_ready %}
-{{ block.super }}
-
+    {{ block.super }}
 {% endblock %}
-
 
 {% block extrahead %}
     {{ block.super }}
     {# INFO: we need to add styles here instead of "extrastyle" to avoid conflicts with adminstyle #}
     <link rel="stylesheet" href="{% static_with_version 'cms/css/cms.base.css' %}">
     <link rel="stylesheet" href="{% static_with_version 'cms/css/cms.pagetree.css' %}">
-    <script>
-        var pageadmin_static_url_prefix = "{% static "djangocms_pageadmin/" %}";
-    </script>
     <script src="{% static_with_version 'cms/js/dist/bundle.admin.base.min.js' %}"></script>
     <script src="{% static_with_version 'cms/js/dist/bundle.admin.pagetree.min.js' %}"></script>
-    <script src="{% static_with_version 'cms/js/dist/bundle.admin.pagetree.min.js' %}"></script>
-    <script src="{% static 'djangocms_pageadmin/js/actions.js' %}"></script>
+
+    {# INFO: versioning_static_url_prefix variable is used in versioning actions.js #}
+    <script>
+        let versioning_static_url_prefix = "{% static "djangocms_versioning/" %}";
+    </script>
 {% endblock extrahead %}
-
-
