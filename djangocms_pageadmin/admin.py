@@ -55,6 +55,12 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     ordering = ['-versions__modified']
     search_fields = ("title",)
 
+    class Media:
+        js = ("admin/js/jquery.init.js", "djangocms_versioning/js/actions.js")
+        css = {
+            "all": ("djangocms_pageadmin/css/actions.css", "djangocms_versioning/css/actions.css",)
+        }
+
     def get_list_display(self, request):
         return self._list_display + [self._list_actions(request)]
 
@@ -165,6 +171,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         ]
 
     def _get_preview_link(self, obj, request, disabled=False):
+        # This is almost the same as extendedversionmixin, with exception of 'keepsideframe' arg:
         return render_to_string(
             "djangocms_pageadmin/admin/icons/preview.html",
             {"url": get_object_preview_url(obj), "disabled": disabled, "keepsideframe": False},
@@ -429,9 +436,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             ),
         ]
         return new_urls + old_urls
-
-    class Media:
-        css = {"all": ("djangocms_pageadmin/css/actions.css",)}
 
 
 admin.site.unregister(PageContent)

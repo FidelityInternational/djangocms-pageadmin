@@ -5,7 +5,7 @@
 {% if disabled %}
     inactive
 {% endif %}
-    cms-page-admin-action-btn
+    cms-versioning-action-btn
     cms-page-admin-action-{% block name %}{% endblock %}
     {% if get|default_if_none:True %} cms-form-get-method {% endif %}
     {% if action|default_if_none:True %} js-page-admin-action {% endif %}

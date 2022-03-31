@@ -310,6 +310,18 @@ class ListActionsTestCase(CMSTestCase):
             reverse("admin:cms_page_advanced", args=(pagecontent.page_id,)),
         )
 
+    def test_burger_menu_available(self):
+        """
+        The actions burger menu should be available for PageContent.
+        Dependent on djangocms_versioning.
+        """
+        pagecontent = PageContentWithVersionFactory()
+        func = self.modeladmin._list_actions(self.get_request("/"))
+        response = func(pagecontent)
+        soup = parse_html(response)
+
+        self.assertTrue(soup.find_all("a", class_="cms-versioning-action-btn"))
+
 
 class SetHomeViewTestCase(CMSTestCase):
     def test_get_method_is_not_allowed(self):

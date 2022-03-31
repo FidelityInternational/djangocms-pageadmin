@@ -4,7 +4,7 @@ Changelog
 
 Unreleased
 ==========
-
+* feat: Moved changelist view burger menu to djangocms_versioning app for reuse purposes.
 
 1.0.0 (2022-02-10)
 ==================
