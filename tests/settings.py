@@ -24,6 +24,7 @@ HELPER_SETTINGS = {
         "djangocms_text_ckeditor",
         "djangocms_versioning",
         "djangocms_version_locking",
+        "djangocms_alias",
     ],
     "LANGUAGES": (
         ("en", "English"),
