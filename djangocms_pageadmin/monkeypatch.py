@@ -1,10 +1,12 @@
 from django.utils.translation import ugettext_lazy as _
 
 from cms.cms_toolbars import PlaceholderToolbar
-from cms.toolbar.utils import get_object_preview_url
 from cms.toolbar.items import ButtonList
+from cms.toolbar.utils import get_object_preview_url
 
-from djangocms_version_locking.monkeypatch.cms_toolbars import ButtonWithAttributes
+from djangocms_version_locking.monkeypatch.cms_toolbars import (
+    ButtonWithAttributes
+)
 
 
 def new_preview_button(func):
