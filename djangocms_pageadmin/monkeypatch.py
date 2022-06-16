@@ -5,7 +5,7 @@ from cms.toolbar.items import ButtonList
 from cms.toolbar.utils import get_object_preview_url
 
 from djangocms_version_locking.monkeypatch.cms_toolbars import (
-    ButtonWithAttributes
+    ButtonWithAttributes,
 )
 
 
