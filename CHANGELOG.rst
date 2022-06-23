@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.1.0 (2022-06-23)
+==================
 * feat: Added monkeypatch to inject target="_blank" attribute into the toolbar preview button
 
 1.0.0 (2022-02-10)
