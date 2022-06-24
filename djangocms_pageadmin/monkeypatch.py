@@ -32,11 +32,11 @@ def new_view_published_button(func):
                 url=published_version.get_absolute_url(),
                 disabled=False,
                 extra_classes=['cms-btn', 'cms-btn-switch-save'],
-
+                html_attributes={"target": "_blank"},
             )
             item.buttons.append(view_published_button)
             self.toolbar.add_item(item)
-        return inner
+    return inner
 
 
 VersioningToolbar._add_view_published_button = new_view_published_button(VersioningToolbar._add_view_published_button)
