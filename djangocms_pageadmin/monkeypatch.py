@@ -11,7 +11,7 @@ from djangocms_version_locking.monkeypatch.cms_toolbars import (
 def new_view_published_button(func):
     """
     The cms core does not allow for custom attributes to be specified for toolbar buttons, therefore,
-    monkeypatch the method which adds preview to use the ButtonWithAttributes item from djangocms-version-locking
+    monkeypatch the method which adds view published to use the ButtonWithAttributes item from djangocms-version-locking
     """
     def inner(self, **kwargs):
         """Helper method to add a publish button to the toolbar
