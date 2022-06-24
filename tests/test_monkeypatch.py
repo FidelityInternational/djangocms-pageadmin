@@ -1,25 +1,35 @@
-from cms.test_utils.testcases import CMSTestCase
-from cms.toolbar.utils import get_object_preview_url, get_object_edit_url
+from django.utils.text import slugify
 
-from djangocms_versioning.constants import PUBLISHED
-from djangocms_versioning.test_utils.test_helpers import find_toolbar_buttons, get_toolbar
+from cms.test_utils.testcases import CMSTestCase
+from cms.toolbar.utils import get_object_preview_url
+
+from djangocms_versioning.test_utils.factories import PageUrlFactory
 
 from djangocms_pageadmin.test_utils import factories
 
 
 class ToolbarMonkeyPatchTestCase(CMSTestCase):
-    def test_preview_button_contains_target(self):
+
+    def test_view_published_in_toolbar_in_preview_mode_button_url(self):
         """
         The monkeypatch adds the target attribute to the view published button
         """
-        version = factories.PageVersionFactory(content__template="page.html", state=PUBLISHED)
-        toolbar = get_toolbar(version.content, preview_mode=True)
-        toolbar.post_template_populate()
-
-        button = toolbar.toolbar.get_right_items()[1].buttons[0]
-        rendered_button = button.render()
-
-        self.assertIn(
-            'class="cms-btn cms-btn cms-btn-switch-save" target="_blank" >View Published</a>', rendered_button
+        published_version = factories.PageVersionFactory(content__template="page.html", content__language="en")
+        language = published_version.content.language
+        PageUrlFactory(
+            page=published_version.content.page,
+            language=language,
+            path=slugify("test_page"),
+            slug=slugify("test_page"),
         )
-        self.assertIn(version.content.get_absolute_url(), rendered_button)
+        published_version.publish(user=self.get_superuser())
+        draft_version = published_version.copy(self.get_superuser())
+        preview_endpoint = get_object_preview_url(draft_version.content)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(preview_endpoint)
+
+        self.assertContains(response, '<a href="/en/test_page/"')
+        self.assertContains(
+            response,  'class="cms-btn cms-btn cms-btn-switch-save" target="_blank" >View Published</a>'
+        )
