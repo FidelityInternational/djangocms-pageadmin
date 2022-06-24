@@ -11,6 +11,7 @@ class ToolbarMonkeyPatchTestCase(CMSTestCase):
         """
         user = self.get_superuser()
         version = factories.PageVersionFactory(created_by=user, content__template="page.html")
+        version.publish(user)
         url = get_object_edit_url(version.content)
 
         with self.login_user_context(user):
