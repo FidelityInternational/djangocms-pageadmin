@@ -2,10 +2,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from cms.toolbar.items import ButtonList
 
-from djangocms_versioning.cms_toolbars import VersioningToolbar
 from djangocms_version_locking.monkeypatch.cms_toolbars import (
     ButtonWithAttributes,
 )
+from djangocms_versioning.cms_toolbars import VersioningToolbar
 
 
 def new_view_published_button(func):
