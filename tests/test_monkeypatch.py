@@ -1,35 +1,20 @@
-from django.utils.text import slugify
-
 from cms.test_utils.testcases import CMSTestCase
-from cms.toolbar.utils import get_object_preview_url
-
-from djangocms_versioning.test_utils.factories import PageUrlFactory
+from cms.toolbar.utils import get_object_edit_url, get_object_preview_url
 
 from djangocms_pageadmin.test_utils import factories
 
 
 class ToolbarMonkeyPatchTestCase(CMSTestCase):
-
-    def test_view_published_in_toolbar_in_preview_mode_button_url(self):
+    def test_preview_button_contains_target(self):
         """
-        The monkeypatch adds the target attribute to the view published button
+        The monkeypatch adds the target attribute to the preview button only
         """
-        published_version = factories.PageVersionFactory(content__template="page.html", content__language="en")
-        language = published_version.content.language
-        PageUrlFactory(
-            page=published_version.content.page,
-            language=language,
-            path=slugify("test_page"),
-            slug=slugify("test_page"),
-        )
-        published_version.publish(user=self.get_superuser())
-        draft_version = published_version.copy(self.get_superuser())
-        preview_endpoint = get_object_preview_url(draft_version.content)
+        user = self.get_superuser()
+        version = factories.PageVersionFactory(created_by=user, content__template="page.html")
+        url = get_object_edit_url(version.content)
 
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(preview_endpoint)
+        with self.login_user_context(user):
+            response = self.client.get(url)
 
-        self.assertContains(response, '<a href="/en/test_page/"')
-        self.assertContains(
-            response,  'class="cms-btn cms-btn cms-btn-switch-save" target="_blank" >View Published</a>'
-        )
+        self.assertContains(response, 'class="cms-btn cms-btn cms-btn-switch-save" target="_blank"')
+        self.assertContains(response, get_object_preview_url(version.content))
