@@ -4,7 +4,6 @@ Changelog
 
 Unreleased
 ==========
-* fix: Update monkeypatch to target View Published instead of Preview buttons
 
 1.1.0 (2022-06-23)
 ==================
