@@ -13,8 +13,7 @@ from djangocms_pageadmin.test_utils import factories
 
 class PageAdminToolbarTestCase(CMSTestCase):
     def _get_versionable(self):
-        """Helper method to get the versionable for the content type
-        of the version
+        """Helper method to get the versionable for PageContent
         """
         versioning_extension = apps.get_app_config("djangocms_versioning").cms_extension
         return versioning_extension.versionables_by_content[PageContent]
