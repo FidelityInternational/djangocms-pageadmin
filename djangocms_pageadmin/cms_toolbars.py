@@ -11,6 +11,8 @@ from djangocms_moderation import helpers
 from djangocms_moderation.cms_toolbars import ModerationToolbar
 from djangocms_versioning.models import Version
 
+from .helpers import _get_url
+
 
 class PageAdminToolBar(ModerationToolbar):
     """
@@ -21,14 +23,13 @@ class PageAdminToolBar(ModerationToolbar):
         item = ButtonList(side=self.toolbar.RIGHT)
         proxy_model = self._get_proxy_model()
         version = Version.objects.get_for_content(self.toolbar.obj)
-        language = self.toolbar.request_language
         url = reverse(
             "admin:{app}_{model}_edit_redirect".format(
                 app=proxy_model._meta.app_label, model=proxy_model.__name__.lower()
             ),
             args=(version.pk,),
         )
-        url = "{url}?live-URL={live_url}".format(url=url, live_url=self.toolbar.obj.page.get_slug(language))
+        url = "{url}?live-URL={live_url}".format(url=url, live_url=_get_url(self.toolbar.obj))
         item.add_button(
             _("Edit"),
             url=url,
@@ -56,7 +57,7 @@ class PageAdminToolBar(ModerationToolbar):
         """
         language = self.toolbar.request_language
         url = get_object_preview_url(self.toolbar.obj, language=language)
-        url = "{url}?live-URL={live_url}".format(url=url, live_url=self.toolbar.obj.page.get_slug(language))
+        url = "{url}?live-URL={live_url}".format(url=url, live_url=_get_url(self.toolbar.obj))
         item = ButtonList(side=self.toolbar.RIGHT)
         item.add_button(
             _('Preview'),

@@ -33,7 +33,7 @@ class PageAdminToolbarTestCase(CMSTestCase):
         edit_endpoint = get_object_edit_url(draft_version.content)
         expected_url = "{}?live-URL={}".format(
             get_object_preview_url(draft_version.content),
-            draft_version.content.page.get_slug(language)
+            "/en/test_page/"
         )
 
         with self.login_user_context(self.get_superuser()):
@@ -65,7 +65,7 @@ class PageAdminToolbarTestCase(CMSTestCase):
         )
         expected_url = "{}?live-URL={}".format(
             edit_url,
-            draft_version.content.page.get_slug(language)
+            "/en/test_page/"
         )
 
         with self.login_user_context(self.get_superuser()):
