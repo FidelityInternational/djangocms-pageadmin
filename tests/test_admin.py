@@ -157,13 +157,17 @@ class ListActionsTestCase(CMSTestCase):
 
     def test_preview_link(self):
         pagecontent = PageContentWithVersionFactory()
+        expected_url = "{}?live-URL={}".format(
+            get_object_preview_url(pagecontent),
+            pagecontent.page.get_slug(pagecontent.language)
+        )
         func = self.modeladmin._list_actions(self.get_request("/"))
         response = func(pagecontent)
         soup = parse_html(response)
         element = soup.find("a", {"class": "cms-page-admin-action-preview"})
         self.assertIsNotNone(element, "Missing a.cms-page-admin-action-preview element")
         self.assertEqual(element["title"], "Preview")
-        self.assertEqual(element["href"], get_object_preview_url(pagecontent))
+        self.assertEqual(element["href"], expected_url)
 
     @skip("Skip Test as Edit link is commented in list_actions")
     def test_edit_link(self):

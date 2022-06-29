@@ -167,7 +167,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def _get_preview_link(self, obj, request, disabled=False):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/preview.html",
-            {"url": get_object_preview_url(obj), "disabled": disabled, "keepsideframe": False},
+            {
+                "url": "{}?live-URL={}".format(get_object_preview_url(obj), obj.page.get_slug(obj.language)),
+                "disabled": disabled,
+                "keepsideframe": False
+            },
         )
 
     def _get_edit_link(self, obj, request, disabled=False):
@@ -189,7 +193,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
         return render_to_string(
             "djangocms_pageadmin/admin/icons/edit.html",
-            {"url": url, "disabled": disabled, "get": False},
+            {
+                "url": "{}?live-URL={}".format(url, obj.page.get_slug('en')),
+                "disabled": disabled,
+                "get": False
+            },
         )
 
     def _get_duplicate_link(self, obj, request, disabled=False):

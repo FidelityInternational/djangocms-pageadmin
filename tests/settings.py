@@ -25,6 +25,7 @@ HELPER_SETTINGS = {
         "djangocms_versioning",
         "djangocms_version_locking",
         "djangocms_alias",
+        "djangocms_moderation",
     ],
     "LANGUAGES": (
         ("en", "English"),
