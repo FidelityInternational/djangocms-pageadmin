@@ -194,7 +194,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/edit.html",
             {
-                "url": "{}?live-URL={}".format(url, obj.page.get_slug('en')),
+                "url": "{}?live-URL={}".format(url, obj.page.get_slug(obj.language)),
                 "disabled": disabled,
                 "get": False
             },
