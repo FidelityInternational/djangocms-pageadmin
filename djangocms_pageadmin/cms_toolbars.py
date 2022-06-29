@@ -14,7 +14,7 @@ from djangocms_versioning.models import Version
 
 class PageAdminToolBar(ModerationToolbar):
     """
-    Toolbar inheriting from VersioningToolbar and PlaceholderToolbar to replace the VersionToolbar
+    Toolbar inheriting from ModerationToolbar, to replace it with altered edit and preview endpoints
     """
 
     def _add_pageadmin_edit_button(self, disabled=False):
