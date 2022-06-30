@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Migrate CI to use Github Actions
 
 1.1.1 (2022-06-25)
 ==================
