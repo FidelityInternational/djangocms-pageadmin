@@ -5,7 +5,6 @@ Changelog
 Unreleased
 ==========
 * feat: Preview and edit endpoints pass live url as query string parameter
-* feat: Migrated to Github Actions
 
 1.1.1 (2022-06-25)
 ==================
