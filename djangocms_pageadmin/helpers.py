@@ -17,10 +17,8 @@ def proxy_model(obj):
 
 def _get_url(obj):
     path = obj.page.get_path(obj.language)
-    url = None
     with override(obj.language):
         if obj.page.is_home:
-            url = reverse("pages-root")
+            return reverse("pages-root")
         if path:
-            url = reverse("pages-details-by-slug", kwargs={"slug": path})
-    return url
+            return reverse("pages-details-by-slug", kwargs={"slug": path})

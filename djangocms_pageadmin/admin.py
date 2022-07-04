@@ -29,7 +29,7 @@ from djangocms_versioning.models import Version
 
 from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
 from .forms import DuplicateForm
-from .helpers import proxy_model
+from .helpers import _get_url, proxy_model
 
 
 try:
@@ -165,10 +165,11 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         ]
 
     def _get_preview_link(self, obj, request, disabled=False):
+
         return render_to_string(
             "djangocms_pageadmin/admin/icons/preview.html",
             {
-                "url": "{}?live-URL={}".format(get_object_preview_url(obj), obj.page.get_slug(obj.language)),
+                "url": "{}?live-URL={}".format(get_object_preview_url(obj), _get_url(obj)),
                 "disabled": disabled,
                 "keepsideframe": False
             },
@@ -194,7 +195,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/edit.html",
             {
-                "url": "{}?live-URL={}".format(url, obj.page.get_slug(obj.language)),
+                "url": "{}?live-URL={}".format(url, _get_url(obj)),
                 "disabled": disabled,
                 "get": False
             },
