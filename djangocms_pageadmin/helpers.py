@@ -16,6 +16,10 @@ def proxy_model(obj):
 
 
 def _get_url(obj):
+    """
+    Get the relative path of a live URL for a given page,
+    this helper is required as slug doesn't necessarily provide the correct path if a page is updated.
+    """
     path = obj.page.get_path(obj.language)
     with override(obj.language):
         if obj.page.is_home:

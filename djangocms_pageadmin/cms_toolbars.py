@@ -44,7 +44,7 @@ class PageAdminToolBar(ModerationToolbar):
         # can we moderate content object?
         # return early to avoid further DB calls below
         if not helpers.is_registered_for_moderation(self.toolbar.obj):
-            return self._add_edit_button(disabled=disabled)
+            return self._add_pageadmin_edit_button(disabled=disabled)
 
         # yes we can! but is it locked?
         if helpers.is_obj_review_locked(self.toolbar.obj, self.request.user):
