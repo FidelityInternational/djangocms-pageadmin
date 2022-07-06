@@ -4,16 +4,24 @@ from django.utils.translation import ugettext_lazy as _
 from cms.toolbar.items import ButtonList
 from cms.toolbar.utils import get_object_preview_url
 
-from djangocms_moderation import helpers
-from djangocms_moderation.cms_toolbars import ModerationToolbar
-from djangocms_versioning.cms_toolbars import replace_toolbar
+from djangocms_versioning.cms_toolbars import replace_toolbar, VersioningToolbar
 from djangocms_versioning.models import Version
 
 from .conf import PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME
 from .helpers import _get_url
 
+try:
+    from djangocms_moderation import helpers
+    from djangocms_moderation.cms_toolbars import ModerationToolbar
 
-class PageAdminToolBar(ModerationToolbar):
+    moderation_installed = True
+    toolbar_to_replace = ModerationToolbar
+except ImportError:
+    moderation_installed = False
+    toolbar_to_replace = VersioningToolbar
+
+
+class PageAdminToolBar(toolbar_to_replace):
     """
     Toolbar inheriting from ModerationToolbar, to replace it with altered edit and preview endpoints
     """
@@ -42,12 +50,12 @@ class PageAdminToolBar(ModerationToolbar):
         """
         # can we moderate content object?
         # return early to avoid further DB calls below
-        if not helpers.is_registered_for_moderation(self.toolbar.obj):
-            return self._add_pageadmin_edit_button(disabled=disabled)
-
-        # yes we can! but is it locked?
-        if helpers.is_obj_review_locked(self.toolbar.obj, self.request.user):
-            disabled = True
+        if moderation_installed:
+            if not helpers.is_registered_for_moderation(self.toolbar.obj):
+                return self._add_pageadmin_edit_button(disabled=disabled)
+            # yes we can! but is it locked?
+            if helpers.is_obj_review_locked(self.toolbar.obj, self.request.user):
+                disabled = True
 
         return self._add_pageadmin_edit_button(disabled)
 
@@ -67,4 +75,4 @@ class PageAdminToolBar(ModerationToolbar):
         self.toolbar.add_item(item)
 
 
-replace_toolbar(ModerationToolbar, PageAdminToolBar)
+replace_toolbar(toolbar_to_replace, PageAdminToolBar)

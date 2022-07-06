@@ -196,7 +196,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/edit.html",
             {
-                "url": f"{get_object_preview_url(obj)}?{PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME}={_get_url(obj)}",
+                "url": f"{url}?{PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME}={_get_url(obj)}",
                 "disabled": disabled,
                 "get": False
             },
