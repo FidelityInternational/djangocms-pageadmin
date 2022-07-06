@@ -1,16 +1,15 @@
-from collections import OrderedDict
-
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from cms.toolbar.items import ButtonList
 from cms.toolbar.utils import get_object_preview_url
-from cms.toolbar_pool import toolbar_pool
 
 from djangocms_moderation import helpers
 from djangocms_moderation.cms_toolbars import ModerationToolbar
+from djangocms_versioning.cms_toolbars import replace_toolbar
 from djangocms_versioning.models import Version
 
+from .conf import PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME
 from .helpers import _get_url
 
 
@@ -29,7 +28,7 @@ class PageAdminToolBar(ModerationToolbar):
             ),
             args=(version.pk,),
         )
-        url = "{url}?live-URL={live_url}".format(url=url, live_url=_get_url(self.toolbar.obj))
+        url = f"{url}?{PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME}={_get_url(self.toolbar.obj)}"
         item.add_button(
             _("Edit"),
             url=url,
@@ -57,7 +56,7 @@ class PageAdminToolBar(ModerationToolbar):
         """
         language = self.toolbar.request_language
         url = get_object_preview_url(self.toolbar.obj, language=language)
-        url = "{url}?live-URL={live_url}".format(url=url, live_url=_get_url(self.toolbar.obj))
+        url = f"{url}?{PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME}={_get_url(self.toolbar.obj)}"
         item = ButtonList(side=self.toolbar.RIGHT)
         item.add_button(
             _('Preview'),
@@ -66,20 +65,6 @@ class PageAdminToolBar(ModerationToolbar):
             extra_classes=['cms-btn', 'cms-btn-switch-save'],
         )
         self.toolbar.add_item(item)
-
-
-def replace_toolbar(old, new):
-    """Replace `old` toolbar class with `new` class,
-    while keeping its position in toolbar_pool.
-    """
-    new_name = ".".join((new.__module__, new.__name__))
-    old_name = ".".join((old.__module__, old.__name__))
-    toolbar_pool.toolbars = OrderedDict(
-        [
-            (new_name, new) if name == old_name else (name, toolbar)
-            for name, toolbar in toolbar_pool.toolbars.items()
-        ]
-    )
 
 
 replace_toolbar(ModerationToolbar, PageAdminToolBar)

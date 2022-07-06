@@ -27,6 +27,7 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
+from .conf import PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME
 from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import _get_url, proxy_model
@@ -169,7 +170,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/preview.html",
             {
-                "url": "{}?live-URL={}".format(get_object_preview_url(obj), _get_url(obj)),
+                "url": f"{get_object_preview_url(obj)}?{PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME}={_get_url(obj)}",
                 "disabled": disabled,
                 "keepsideframe": False
             },
@@ -195,7 +196,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/edit.html",
             {
-                "url": "{}?live-URL={}".format(url, _get_url(obj)),
+                "url": f"{get_object_preview_url(obj)}?{PAGEADMIN_LIVE_URL_QUERY_PARAM_NAME}={_get_url(obj)}",
                 "disabled": disabled,
                 "get": False
             },
