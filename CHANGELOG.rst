@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.1.2 (2022-07-20)
+==================
 * fix: Admin burger menu excluding Preview and Edit buttons in all languages
 * feat: Migrate CI to use Github Actions
 
