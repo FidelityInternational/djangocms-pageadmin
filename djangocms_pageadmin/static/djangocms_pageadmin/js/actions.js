@@ -44,8 +44,9 @@
       }
 
       $(actions[0]).children('.cms-page-admin-action-btn').each(function (index, item) {
-        /* exclude some buttons */
-        if (item.title == "Preview" || item.title == "Edit") {
+        /* exclude preview and edit buttons */
+        if (item.classList.contains('cms-page-admin-action-preview') ||
+            item.classList.contains('cms-page-admin-action-edit')) {
           return;
         }
 
