@@ -2,7 +2,7 @@ import csv
 
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
-# from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -453,24 +453,33 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         writer = csv.writer(response)
         writer.writerow(field_names)
         for row in queryset:
-            # print(dir(row))
-            # print(row.title)
-            print(row.versions)
             title = row.title
-            content_type = "page"
-            expiry_date = self.test(row)
+            content_type = self.content_type(row)
+            expiry_date = self._format_export_datetime(self.expiry_date(row))
             version_state = self.state(row)
             version_author = self.author(row)
             url = self.url(row, True)
-            compliance_number = "compliance number"
+            compliance_number = self.compliance_number(row)
             writer.writerow([title, content_type, expiry_date, version_state, version_author, url, compliance_number])
 
         return response
 
-    def test(self, obj):
+    def expiry_date(self, obj):
         version = self.get_version(obj)
-        print(dir(version))
-        return "tetst"
+        if hasattr(version, "contentexpiry"):
+            return version.contentexpiry.expires
+        return 
+    
+    def compliance_number(self, obj):
+        version = self.get_version(obj)
+        if hasattr(version, "contentexpiry"):
+            return version.contentexpiry.compliance_number
+        return
+
+    def content_type(self, obj):
+        version = self.get_version(obj)
+        content_type = ContentType.objects.get_for_model(version.content)
+        return content_type
 
     def get_exported_queryset(self, request):
         """
@@ -482,23 +491,36 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         search_fields = self.get_search_fields(request)
         changelist = self.get_changelist(request)
 
-        changelist_kwargs = {'request': request,
-                             'model': self.model,
-                             'list_display': list_display,
-                             'list_display_links': list_display_links,
-                             'list_filter': list_filter,
-                             'date_hierarchy': self.date_hierarchy,
-                             'search_fields': search_fields,
-                             'list_select_related': self.list_select_related,
-                             'list_per_page': self.list_per_page,
-                             'list_max_show_all': self.list_max_show_all,
-                             'list_editable': self.list_editable,
-                             'model_admin': self,
-                             'sortable_by': self.sortable_by
-                             }
+        changelist_kwargs = {
+            'request': request,
+            'model': self.model,
+            'list_display': list_display,
+            'list_display_links': list_display_links,
+            'list_filter': list_filter,
+            'date_hierarchy': self.date_hierarchy,
+            'search_fields': search_fields,
+            'list_select_related': self.list_select_related,
+            'list_per_page': self.list_per_page,
+            'list_max_show_all': self.list_max_show_all,
+            'list_editable': self.list_editable,
+            'model_admin': self,
+            'sortable_by': self.sortable_by
+        }
         cl = changelist(**changelist_kwargs)
 
         return cl.get_queryset(request)
+
+    def _format_export_datetime(self, date):
+        """
+        date: DateTime object
+        date_format: String, date time string format for strftime
+
+        Returns a formatted human readable date time string
+        """
+        import datetime
+        if isinstance(date, datetime.date):
+            return date.strftime("%Y/%m/%d %H:%M %z")
+        return ""
 
     class Media:
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
