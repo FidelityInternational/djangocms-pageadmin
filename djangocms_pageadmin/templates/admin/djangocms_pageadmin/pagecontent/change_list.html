@@ -1,5 +1,5 @@
 {% extends "admin/change_list.html" %}
-{% load i18n cms_static static %}
+{% load i18n cms_static static admin_urls%}
 
 {% block admin_change_list_document_ready %}
 {{ block.super }}
@@ -21,4 +21,9 @@
     <script src="{% static 'djangocms_pageadmin/js/actions.js' %}"></script>
 {% endblock extrahead %}
 
-
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a class="historylink" href="{% url opts|admin_urlname:'export_csv' %}{{cl.get_query_string}}">{% trans "Export" %}</a>
+    </li>
+{% endblock %}
