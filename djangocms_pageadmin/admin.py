@@ -7,7 +7,11 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import OuterRef, Prefetch, Subquery
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+)
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import re_path, reverse
@@ -43,7 +47,7 @@ except ImportError:
 
 require_POST = method_decorator(require_POST)
 
-print('test')
+
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
@@ -298,7 +302,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         # so we remove it before initiating the standard Django changelist view.
         if 'page_id' in request.GET:
             request.GET = request.GET.copy()
-            del(request.GET['page_id'])
+            del (request.GET['page_id'])
 
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
@@ -468,8 +472,8 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         version = self.get_version(obj)
         if hasattr(version, "contentexpiry"):
             return version.contentexpiry.expires
-        return 
-    
+        return
+
     def compliance_number(self, obj):
         version = self.get_version(obj)
         if hasattr(version, "contentexpiry"):
