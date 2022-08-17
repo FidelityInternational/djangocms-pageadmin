@@ -466,13 +466,13 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
         writer = csv.writer(response)
         writer.writerow(field_names)
-        for row in queryset:
-            title = row.title
-            expiry_date = self._format_export_datetime(self.expiry_date(row))
-            version_state = self.state(row)
-            version_author = self.author(row)
-            url = self.url(row, True)
-            compliance_number = self.compliance_number(row)
+        for obj in queryset:
+            title = obj.title
+            expiry_date = self._format_export_datetime(self.get_expiry_date(obj))
+            version_state = self.state(obj)
+            version_author = self.author(obj)
+            url = self.url(obj, True)
+            compliance_number = self.get_compliance_number(obj)
             writer.writerow([title, expiry_date, version_state, version_author, url, compliance_number])
 
         return response
@@ -483,7 +483,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return version.contentexpiry.expires
         return ""
 
-    def compliance_number(self, obj):
+    def get_compliance_number(self, obj):
         version = self.get_version(obj)
         if hasattr(version, "contentexpiry"):
             return version.contentexpiry.compliance_number
