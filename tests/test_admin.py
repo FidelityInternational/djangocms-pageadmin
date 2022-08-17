@@ -4,11 +4,10 @@ from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
-from django.test import RequestFactory, TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.text import slugify
-from django.utils.translation import override as force_language
 
 from cms.api import add_plugin
 from cms.models import PageContent, PageUrl
