@@ -315,7 +315,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         # so we remove it before initiating the standard Django changelist view.
         if 'page_id' in request.GET:
             request.GET = request.GET.copy()
-            del(request.GET['page_id'])
+            del (request.GET['page_id'])
 
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
