@@ -477,7 +477,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
         return response
 
-    def expiry_date(self, obj):
+    def get_expiry_date(self, obj):
         version = self.get_version(obj)
         if hasattr(version, "contentexpiry"):
             return version.contentexpiry.expires
