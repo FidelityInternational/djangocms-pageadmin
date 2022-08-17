@@ -1,5 +1,3 @@
-import datetime
-
 from functools import partial
 from unittest import skip
 from unittest.mock import patch
@@ -8,7 +6,6 @@ from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.test import TestCase, TransactionTestCase
 from django.test.utils import override_settings
-from django.utils import timezone
 from django.urls import reverse
 
 from cms.api import add_plugin
