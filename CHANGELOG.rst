@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: CSV export functionality added to the change list
 
 1.1.2 (2022-07-20)
 ==================

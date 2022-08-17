@@ -118,8 +118,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 url = reverse("pages-details-by-slug", kwargs={"slug": path})
         if url is not None and csv is False:
             return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
-        else:
-            return url
+        return url
 
     url.short_description = _("url")
 
@@ -444,13 +443,25 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         ]
         return new_urls + old_urls
 
+    def _format_export_datetime(self, date):
+        """
+        date: DateTime object
+        date_format: String, date time string format for strftime
+
+        Returns a formatted human readable date time string
+        """
+        import datetime
+        if isinstance(date, datetime.date):
+            return date.strftime("%Y/%m/%d %H:%M %z")
+        return ""
+
     def export_to_csv(self, request):
         """
         Retrieves the queryset and exports to csv format
         """
         queryset = self.get_exported_queryset(request)
         meta = self.model._meta
-        field_names = ['Title', 'Content Type', 'Expiry Date', 'Version State', 'Version Author', 'Url',
+        field_names = ['Title', 'Expiry Date', 'Version State', 'Version Author', 'Url',
                        'Compliance Number']
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
@@ -458,13 +469,12 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         writer.writerow(field_names)
         for row in queryset:
             title = row.title
-            content_type = self.content_type(row)
             expiry_date = self._format_export_datetime(self.expiry_date(row))
             version_state = self.state(row)
             version_author = self.author(row)
             url = self.url(row, True)
             compliance_number = self.compliance_number(row)
-            writer.writerow([title, content_type, expiry_date, version_state, version_author, url, compliance_number])
+            writer.writerow([title, expiry_date, version_state, version_author, url, compliance_number])
 
         return response
 
@@ -472,18 +482,13 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         version = self.get_version(obj)
         if hasattr(version, "contentexpiry"):
             return version.contentexpiry.expires
-        return
+        return ""
 
     def compliance_number(self, obj):
         version = self.get_version(obj)
         if hasattr(version, "contentexpiry"):
             return version.contentexpiry.compliance_number
-        return
-
-    def content_type(self, obj):
-        version = self.get_version(obj)
-        content_type = ContentType.objects.get_for_model(version.content)
-        return content_type
+        return ""
 
     def get_exported_queryset(self, request):
         """
@@ -513,18 +518,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         cl = changelist(**changelist_kwargs)
 
         return cl.get_queryset(request)
-
-    def _format_export_datetime(self, date):
-        """
-        date: DateTime object
-        date_format: String, date time string format for strftime
-
-        Returns a formatted human readable date time string
-        """
-        import datetime
-        if isinstance(date, datetime.date):
-            return date.strftime("%Y/%m/%d %H:%M %z")
-        return ""
 
     class Media:
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
