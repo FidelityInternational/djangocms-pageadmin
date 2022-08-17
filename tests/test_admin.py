@@ -4,9 +4,11 @@ from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
-from django.test import TestCase, TransactionTestCase
+from django.test import RequestFactory, TestCase, TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils.text import slugify
+from django.utils.translation import override as force_language
 
 from cms.api import add_plugin
 from cms.models import PageContent, PageUrl
@@ -23,6 +25,7 @@ from djangocms_pageadmin.admin import PageContentAdmin
 from djangocms_pageadmin.compat import DJANGO_GTE_30
 from djangocms_pageadmin.test_utils.factories import (
     PageContentWithVersionFactory,
+    PageUrlFactory,
     PageVersionFactory,
     PlaceholderFactory,
     SiteFactory,
@@ -647,3 +650,154 @@ class CMSPageToolbarTestCase(CMSTestCase):
 
         self.assertSetEqual(set(response.context["cl"].queryset), set(pages))
         self.assertSetEqual(set(response_with_page_id.context["cl"].queryset), set(pages))
+
+
+class AdminSearchTestCase(CMSTestCase):
+    """
+    Test case covers custom search functionality
+    """
+    def setUp(self):
+        template_1 = get_cms_setting('TEMPLATES')[0][0]
+        self.language = "en"
+        self.pagecontent = PageContentWithVersionFactory(
+            template=template_1, language=self.language,
+            title="This is a test"
+        )
+        PageContentWithVersionFactory.create_batch(
+            template=template_1, language=self.language,
+            size=5,
+        )
+        self.page_admin = PageContentAdmin(PageContent, admin)
+        # Use _base_manager so that non-published contents are available
+        self.page_queryset = PageContent._base_manager.all()
+        self.page_urls = []
+
+    def _get_page_admin_request(self, search_term):
+        return f"/admin/cms/pagecontent/?q={search_term}"
+
+    def test_page_url_search_partial_match_from_slug_and_path(self):
+        """
+        Partial URL matches to the slug and path return the PageContent associated with it.
+        """
+        # Create multiple PageUrl for the same page, with different languages
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language=self.language,
+            path=slugify(self.pagecontent.title),
+            slug=slugify(self.pagecontent.title),
+        )
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language="de",
+            path=slugify(self.pagecontent.title),
+            slug=slugify(self.pagecontent.title),
+        )
+        request = self._get_page_admin_request("test")
+        url_instance = self.pagecontent.page.urls.filter(language="en").first()
+        url = url_instance.path
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(request, follow=True)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        results = soup.find_all("td", "field-url")
+
+        self.assertEqual(len(results), 1)
+        self.assertIn(url, results[0].text)
+
+    def test_page_url_search_partial_match_from_slug(self):
+        """
+        Partial URL matches to the slug return the pagecontent associated with it.
+        """
+        # Create multiple PageUrl for the same page, with different languages
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language=self.language,
+            slug=slugify(self.pagecontent.title),
+        )
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language="de",
+            slug=slugify(self.pagecontent.title),
+        )
+        request = self._get_page_admin_request("test")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(request, follow=True)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        results_title = soup.find_all("td", "field-get_title")
+
+        self.assertEqual(len(results_title), 1)
+        # As only slug is populated, the admin will render the url as blank, therefore check the title.
+        self.assertIn(self.pagecontent.title, results_title[0].text)
+
+    def test_page_url_search_partial_match_from_path(self):
+        """
+        Partial URL matches to the path return the pagecontent associated with it
+        """
+        # Create multiple PageUrl for the same page, with different languages
+        page_url = PageUrlFactory(
+            page=self.pagecontent.page,
+            language=self.language,
+            path=slugify(self.pagecontent.title),
+        )
+        request = self._get_page_admin_request("test")
+        url = page_url.path
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(request, follow=True)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        results = soup.find_all("td", "field-url")
+
+        self.assertEqual(len(results), 1)
+        self.assertIn(url, results[0].text)
+
+    def test_page_url_search_invalid_search_criteria(self):
+        """
+        Invalid search criteria are handled gracefully.
+        """
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language=self.language,
+            path=slugify("test-path"),
+            slug=slugify("test-slug"),
+        )
+
+        request = self._get_page_admin_request("not-a-valid-path")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(request, follow=True)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        results = soup.find_all("td", "field-url")
+
+        self.assertEqual(results, [])
+
+    def test_page_url_search_url_in_other_language(self):
+        """
+        With a match in a different language, but not in the current one, the pagecontent should not be returned
+        """
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language="en",
+            path=slugify("test-path"),
+            slug=slugify("test-path"),
+        )
+        PageUrlFactory(
+            page=self.pagecontent.page,
+            language="de",
+            path=slugify("test-url"),
+            slug=slugify("test-url"),
+        )
+
+        request = self._get_page_admin_request("test-url")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(request, follow=True)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        results = soup.find_all("td", "field-url")
+
+        self.assertEqual(results, [])

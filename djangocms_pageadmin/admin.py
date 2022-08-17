@@ -3,14 +3,14 @@ from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
-from django.utils.translation import gettext_lazy as _, override
+from django.utils.translation import get_language, gettext_lazy as _, override
 from django.views.decorators.http import require_POST
 
 from cms import api
@@ -92,11 +92,33 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             )
         )
 
+    def get_search_results(self, request, queryset, search_term):
+        """
+        Override the ModelAdmin method for fetching search results to filter for urls associated with the pagecontent
+        :param request: PageContent Admin request
+        :param queryset: PageContent queryset
+        :param search_term: Term to be searched for
+        :return: results
+        """
+        language = get_language()
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        original_queryset = queryset
+        # Filter by language to avoid hits from URLs in different languages
+        queryset |= queryset.filter(
+            Q(page__urls__slug__icontains=search_term) | Q(page__urls__path__icontains=search_term),
+            page__urls__language=language
+        )
+        # This is a workaround to avoid bringing in much of the code which decides whether a queryset is distinct.
+        if not list(queryset) == list(original_queryset):
+            use_distinct = True
+        return queryset, use_distinct
+
     def get_version(self, obj):
         return obj.versions.all()[0]
 
     def state(self, obj):
         version = self.get_version(obj)
+
         return version.get_state_display()
 
     state.short_description = _("state")
