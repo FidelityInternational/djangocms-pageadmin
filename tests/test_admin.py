@@ -651,7 +651,6 @@ class CMSPageToolbarTestCase(CMSTestCase):
 
 class PageAdminCsvExportFileTestCase(CMSTestCase):
     def setUp(self):
-        # CSV Headings: 0 -> Title, 1 -> Content Type, 2 -> Expiry Date, 3 -> Version State, 4 -> Author, 5 -> Url
         self.headings_map = {
             "title": 0,
             "expiry_date": 1,
