@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
@@ -449,7 +450,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
         Returns a formatted human readable date time string
         """
-        import datetime
         if isinstance(date, datetime.date):
             return date.strftime("%Y/%m/%d %H:%M %z")
         return ""
