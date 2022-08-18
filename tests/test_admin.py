@@ -1,6 +1,8 @@
+import datetime
+
 from functools import partial
 from unittest import skip
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
@@ -18,6 +20,7 @@ from cms.utils.plugins import downcast_plugins
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
+from djangocms_versioning.models import Version
 
 from djangocms_pageadmin.admin import PageContentAdmin
 from djangocms_pageadmin.compat import DJANGO_GTE_30
@@ -28,7 +31,6 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
-
 
 parse_html = partial(BeautifulSoup, features="lxml")
 
@@ -771,3 +773,39 @@ class PageAdminCsvExportFileTestCase(CMSTestCase):
             '<a class="historylink" href="/en/admin/cms/pagecontent/export_csv/?">Export</a>',
             html=True
         )
+
+    def test_get_compliance_number(self):
+        """
+        Compliance number should be returned by the get_compliance_number method
+        """
+        mock_with_content_expiry = MagicMock(spec=Version)
+        mock_with_content_expiry.contentexpiry = MagicMock(compliance_number="123456789123456")
+
+        page_content = PageContent()
+        model_admin = PageContentAdmin(PageContent, admin.AdminSite())
+
+        with patch.object(model_admin, "get_version") as mock_get_version:
+            mock_get_version.return_value = mock_with_content_expiry
+            result = model_admin.get_compliance_number(page_content)
+
+            self.assertEqual(result, "123456789123456")
+            mock_get_version.assert_called_once_with(page_content)
+
+    def test_get_expiry_date(self):
+        """
+        The expiry date should be returned by the get_expiry_date method
+        """
+        from_date = datetime.datetime.now()
+        expire_at = from_date + datetime.timedelta(days=10)
+        mock_with_content_expiry = MagicMock(spec=Version)
+        mock_with_content_expiry.contentexpiry = MagicMock(expires=expire_at)
+
+        page_content = PageContent()
+        model_admin = PageContentAdmin(PageContent, admin.AdminSite())
+
+        with patch.object(model_admin, "get_version") as mock_get_version:
+            mock_get_version.return_value = mock_with_content_expiry
+            result = model_admin.get_expiry_date(page_content)
+
+            self.assertEqual(result, expire_at)
+            mock_get_version.assert_called_once_with(page_content)
