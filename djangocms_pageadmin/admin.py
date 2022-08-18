@@ -116,8 +116,8 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         This is a workaround to avoid replicating the functionality of get_search_results in Django, which checks
         whether a queryset is distinct based on search_fields. We cannot use the standard search_fields configuration,
         because this would not be language aware, and would results in hits on URLs in languages different to the users.
-        As we are looking across reverse FK relations, we know
-        that this method should always return use_distinct=True, therefore if a search has been made, set it as such.
+        As we are looking across reverse FK relations, we know that this method should always return use_distinct=True,
+        therefore if a search has been made, set it as such.
         https://github.com/django/django/blob/2a62cdcfec85938f40abb2e9e6a9ff497e02afe8/django/contrib/admin/options.py#L980 # NOQA
         """
         if search_term:
