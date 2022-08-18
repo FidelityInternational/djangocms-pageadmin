@@ -678,7 +678,6 @@ class AdminSearchTestCase(CMSTestCase):
         """
         Partial URL matches to the slug and path return the PageContent associated with it.
         """
-        # Create multiple PageUrl for the same page, with different languages
         PageUrlFactory(
             page=self.pagecontent.page,
             language=self.language,
@@ -702,7 +701,6 @@ class AdminSearchTestCase(CMSTestCase):
         """
         Partial URL matches to the slug return the pagecontent associated with it.
         """
-        # Create multiple PageUrl for the same page, with different languages
         PageUrlFactory(
             page=self.pagecontent.page,
             language=self.language,
@@ -724,7 +722,6 @@ class AdminSearchTestCase(CMSTestCase):
         """
         Partial URL matches to the path return the pagecontent associated with it.
         """
-        # Create multiple PageUrl for the same page, with different languages
         page_url = PageUrlFactory(
             page=self.pagecontent.page,
             language=self.language,
@@ -767,6 +764,7 @@ class AdminSearchTestCase(CMSTestCase):
         """
         With a match in a different language, but not in the current one, the pagecontent should not be returned.
         """
+        # Create URLs in more than one language
         PageUrlFactory(
             page=self.pagecontent.page,
             language="en",
