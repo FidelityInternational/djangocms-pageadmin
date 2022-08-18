@@ -5,6 +5,7 @@ Changelog
 Unreleased
 ==========
 * feat: PageContent search checks PageUrls
+
 1.1.2 (2022-07-20)
 ==================
 * fix: Admin burger menu excluding Preview and Edit buttons in all languages
