@@ -109,6 +109,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             page__urls__language=language
         )
         # This is a workaround to avoid bringing in much of the code which decides whether a queryset is distinct.
+        # https://github.com/django/django/blob/2a62cdcfec85938f40abb2e9e6a9ff497e02afe8/django/contrib/admin/options.py#L980 # NOQA
         if not list(queryset) == list(original_queryset):
             use_distinct = True
         return queryset, use_distinct
@@ -118,7 +119,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def state(self, obj):
         version = self.get_version(obj)
-
         return version.get_state_display()
 
     state.short_description = _("state")

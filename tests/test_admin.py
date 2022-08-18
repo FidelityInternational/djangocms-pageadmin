@@ -653,7 +653,7 @@ class CMSPageToolbarTestCase(CMSTestCase):
 
 class AdminSearchTestCase(CMSTestCase):
     """
-    Test case covers custom search functionality
+    Test case covers custom search functionality.
     """
     def setUp(self):
         template_1 = get_cms_setting('TEMPLATES')[0][0]
@@ -685,12 +685,6 @@ class AdminSearchTestCase(CMSTestCase):
             path=slugify(self.pagecontent.title),
             slug=slugify(self.pagecontent.title),
         )
-        PageUrlFactory(
-            page=self.pagecontent.page,
-            language="de",
-            path=slugify(self.pagecontent.title),
-            slug=slugify(self.pagecontent.title),
-        )
         request = self._get_page_admin_request("test")
         url_instance = self.pagecontent.page.urls.filter(language="en").first()
         url = url_instance.path
@@ -714,11 +708,6 @@ class AdminSearchTestCase(CMSTestCase):
             language=self.language,
             slug=slugify(self.pagecontent.title),
         )
-        PageUrlFactory(
-            page=self.pagecontent.page,
-            language="de",
-            slug=slugify(self.pagecontent.title),
-        )
         request = self._get_page_admin_request("test")
 
         with self.login_user_context(self.get_superuser()):
@@ -733,7 +722,7 @@ class AdminSearchTestCase(CMSTestCase):
 
     def test_page_url_search_partial_match_from_path(self):
         """
-        Partial URL matches to the path return the pagecontent associated with it
+        Partial URL matches to the path return the pagecontent associated with it.
         """
         # Create multiple PageUrl for the same page, with different languages
         page_url = PageUrlFactory(
@@ -776,7 +765,7 @@ class AdminSearchTestCase(CMSTestCase):
 
     def test_page_url_search_url_in_other_language(self):
         """
-        With a match in a different language, but not in the current one, the pagecontent should not be returned
+        With a match in a different language, but not in the current one, the pagecontent should not be returned.
         """
         PageUrlFactory(
             page=self.pagecontent.page,
