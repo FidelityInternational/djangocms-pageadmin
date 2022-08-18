@@ -115,10 +115,10 @@ class PageContentWithVersionFactory(PageContentFactory):
 
 
 class PageUrlFactory(factory.django.DjangoModelFactory):
-    slug = ''
-    path = ''
+    slug = factory.Faker("slug")
+    path = ""
     managed = False
-    language = 'en'
+    language = "en"
 
     class Meta:
         model = PageUrl
