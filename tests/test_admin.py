@@ -1,6 +1,7 @@
+import datetime
 from functools import partial
 from unittest import skip
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib import admin
 from django.contrib.sites.models import Site
@@ -18,6 +19,7 @@ from cms.utils.plugins import downcast_plugins
 from bs4 import BeautifulSoup
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
 from djangocms_versioning.helpers import version_list_url
+from djangocms_versioning.models import Version
 
 from djangocms_pageadmin.admin import PageContentAdmin
 from djangocms_pageadmin.compat import DJANGO_GTE_30
@@ -647,3 +649,163 @@ class CMSPageToolbarTestCase(CMSTestCase):
 
         self.assertSetEqual(set(response.context["cl"].queryset), set(pages))
         self.assertSetEqual(set(response_with_page_id.context["cl"].queryset), set(pages))
+
+
+class PageAdminCsvExportFileTestCase(CMSTestCase):
+    def setUp(self):
+        self.headings_map = {
+            "title": 0,
+            "expiry_date": 1,
+            "version_state": 2,
+            "version_author": 3,
+            "url": 4,
+            "compliance_number": 5,
+        }
+        self.export_admin_endpoint = self.get_admin_url(PageContent, "export_csv")
+        self.template_1 = get_cms_setting('TEMPLATES')[0][0]
+
+    def test_export_button_endpoint_response_is_a_csv(self):
+        """
+        Valid csv file is returned from the admin export endpoint
+        """
+        PageContentWithVersionFactory.create_batch(6, template=self.template_1, language="en")
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(self.export_admin_endpoint)
+
+        # Endpoint is returning 200 status code
+        self.assertEqual(response.status_code, 200)
+        # Response contains a csv file
+        self.assertEquals(
+            response.get('Content-Disposition'),
+            "attachment; filename={}.csv".format("cms.pagecontent")
+        )
+
+    def test_export_content_headers(self):
+        """
+        Export should contain all the headings in the current page content list display
+        """
+        PageContentWithVersionFactory()
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(self.export_admin_endpoint)
+
+        csv_headings = response.content.decode().splitlines()[0].split(",")
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            csv_headings[self.headings_map["title"]],
+            "Title"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["expiry_date"]],
+            "Expiry Date"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["version_state"]],
+            "Version State"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["version_author"]],
+            "Version Author"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["url"]],
+            "Url"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["compliance_number"]],
+            "Compliance Number"
+        )
+
+    def test_file_content_contains_values(self):
+        """
+        CSV response should contain expected values.
+        """
+        version = PageVersionFactory(state=PUBLISHED, content__language="en")
+        preview_url = get_object_preview_url(version)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(self.export_admin_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+
+        csv_lines = response.content.decode().splitlines()
+
+        content_row_1 = csv_lines[1].split(",")
+
+        self.assertIn(
+            content_row_1[self.headings_map["title"]],
+            version.content.title
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["expiry_date"]],
+            ""
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["compliance_number"]],
+            ""
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["version_state"]].lower(),
+            version.state
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["version_author"]],
+            version.created_by.username
+        )
+        self.assertNotEqual(
+            content_row_1[self.headings_map["url"]],
+            preview_url
+        )
+
+    def test_export_button_is_visible(self):
+        """
+        Export button should be visible on the frontend changelist
+        """
+        admin_endpoint = self.get_admin_url(PageContent, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint)
+
+        self.assertContains(
+            response,
+            '<a class="historylink" href="/en/admin/cms/pagecontent/export_csv/?">Export</a>',
+            html=True
+        )
+
+    def test_get_compliance_number(self):
+        """
+        Compliance number should be returned by the get_compliance_number method
+        """
+        mock_with_content_expiry = MagicMock(spec=Version)
+        mock_with_content_expiry.contentexpiry = MagicMock(compliance_number="123456789123456")
+
+        page_content = PageContent()
+        model_admin = PageContentAdmin(PageContent, admin.AdminSite())
+
+        with patch.object(model_admin, "get_version") as mock_get_version:
+            mock_get_version.return_value = mock_with_content_expiry
+            result = model_admin.get_compliance_number(page_content)
+
+            self.assertEqual(result, "123456789123456")
+            mock_get_version.assert_called_once_with(page_content)
+
+    def test_get_expiry_date(self):
+        """
+        The expiry date should be returned by the get_expiry_date method
+        """
+        from_date = datetime.datetime.now()
+        expire_at = from_date + datetime.timedelta(days=10)
+        mock_with_content_expiry = MagicMock(spec=Version)
+        mock_with_content_expiry.contentexpiry = MagicMock(expires=expire_at)
+
+        page_content = PageContent()
+        model_admin = PageContentAdmin(PageContent, admin.AdminSite())
+
+        with patch.object(model_admin, "get_version") as mock_get_version:
+            mock_get_version.return_value = mock_with_content_expiry
+            result = model_admin.get_expiry_date(page_content)
+
+            self.assertEqual(result, expire_at)
+            mock_get_version.assert_called_once_with(page_content)
