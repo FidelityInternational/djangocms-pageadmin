@@ -1,10 +1,17 @@
+import csv
+import datetime
+
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+)
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import re_path, reverse
@@ -133,7 +140,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     state.short_description = _("state")
 
-    def url(self, obj):
+    def url(self, obj, csv=False):
         path = obj._path
         url = None
         with override(obj.language):
@@ -141,8 +148,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 url = reverse("pages-root")
             if path:
                 url = reverse("pages-details-by-slug", kwargs={"slug": path})
-        if url is not None:
+        if url is not None and csv is False:
             return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
+        return url
 
     url.short_description = _("url")
 
@@ -459,8 +467,88 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 self.admin_site.admin_view(self.set_home_view),
                 name="{}_{}_set_home_content".format(*info),
             ),
+            re_path(
+                r'^export_csv/$',
+                self.admin_site.admin_view(self.export_to_csv),
+                name="{}_{}_export_csv".format(*info),
+            ),
         ]
         return new_urls + old_urls
+
+    def _format_export_datetime(self, date):
+        """
+        date: DateTime object
+        date_format: String, date time string format for strftime
+
+        Returns a formatted human readable date time string
+        """
+        if isinstance(date, datetime.date):
+            return date.strftime("%Y/%m/%d %H:%M %z")
+        return ""
+
+    def export_to_csv(self, request):
+        """
+        Retrieves the queryset and exports to csv format
+        """
+        queryset = self.get_exported_queryset(request)
+        meta = self.model._meta
+        field_names = ['Title', 'Expiry Date', 'Version State', 'Version Author', 'Url',
+                       'Compliance Number']
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+        writer = csv.writer(response)
+        writer.writerow(field_names)
+        for obj in queryset:
+            title = obj.title
+            expiry_date = self._format_export_datetime(self.get_expiry_date(obj))
+            version_state = self.state(obj)
+            version_author = self.author(obj)
+            url = self.url(obj, True)
+            compliance_number = self.get_compliance_number(obj)
+            writer.writerow([title, expiry_date, version_state, version_author, url, compliance_number])
+
+        return response
+
+    def get_expiry_date(self, obj):
+        version = self.get_version(obj)
+        if hasattr(version, "contentexpiry"):
+            return version.contentexpiry.expires
+        return ""
+
+    def get_compliance_number(self, obj):
+        version = self.get_version(obj)
+        if hasattr(version, "contentexpiry"):
+            return version.contentexpiry.compliance_number
+        return ""
+
+    def get_exported_queryset(self, request):
+        """
+        Returns export queryset by respecting applied filters.
+        """
+        list_display = self.get_list_display(request)
+        list_display_links = self.get_list_display_links(request, list_display)
+        list_filter = self.get_list_filter(request)
+        search_fields = self.get_search_fields(request)
+        changelist = self.get_changelist(request)
+
+        changelist_kwargs = {
+            'request': request,
+            'model': self.model,
+            'list_display': list_display,
+            'list_display_links': list_display_links,
+            'list_filter': list_filter,
+            'date_hierarchy': self.date_hierarchy,
+            'search_fields': search_fields,
+            'list_select_related': self.list_select_related,
+            'list_per_page': self.list_per_page,
+            'list_max_show_all': self.list_max_show_all,
+            'list_editable': self.list_editable,
+            'model_admin': self,
+            'sortable_by': self.sortable_by
+        }
+        cl = changelist(**changelist_kwargs)
+
+        return cl.get_queryset(request)
 
     class Media:
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
