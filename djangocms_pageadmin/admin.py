@@ -101,18 +101,25 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         :return: results
         """
         language = get_language()
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        original_queryset = queryset
-        # Filter by language to avoid hits from URLs in different languages
-        queryset |= queryset.filter(
+        returned_queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        """
+        While the returned_queryset contains searches for title, without filtering on the original, we are unable to 
+        search for symbols within the URL, such as '-'. Therefore, filter the original queryset and combine.
+        Language must also be filtered in order to prevent hits on PageContent which have URLS in multiple languages.
+        """
+        returned_queryset |= queryset.filter(
             Q(page__urls__slug__icontains=search_term) | Q(page__urls__path__icontains=search_term),
             page__urls__language=language
         )
-        # This is a workaround to avoid bringing in much of the code which decides whether a queryset is distinct.
-        # https://github.com/django/django/blob/2a62cdcfec85938f40abb2e9e6a9ff497e02afe8/django/contrib/admin/options.py#L980 # NOQA
-        if not list(queryset) == list(original_queryset):
+
+        """
+        This is a workaround to avoid replicating the functionality of get_search_results in django, which checks
+        whether a queryset is distinct.
+        https://github.com/django/django/blob/2a62cdcfec85938f40abb2e9e6a9ff497e02afe8/django/contrib/admin/options.py#L980 # NOQA
+        """
+        if search_term:
             use_distinct = True
-        return queryset, use_distinct
+        return returned_queryset, use_distinct
 
     def get_version(self, obj):
         return obj.versions.all()[0]

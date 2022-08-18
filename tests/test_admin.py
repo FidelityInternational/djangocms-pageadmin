@@ -787,3 +787,25 @@ class AdminSearchTestCase(CMSTestCase):
         results = soup.find_all("td", "field-url")
 
         self.assertEqual(results, [])
+
+    def test_page_url_search_term_symbol(self):
+        """
+        When searching by symbol, appropriate results should be returned
+        """
+        page_url = PageUrlFactory(
+            page=self.pagecontent.page,
+            language="en",
+            path=slugify("test-path"),
+            slug=slugify("test-path"),
+        )
+        request = self._get_page_admin_request("-")
+        url = page_url.path
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(request, follow=True)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        results = soup.find_all("td", "field-url")
+
+        self.assertEqual(len(results), 1)
+        self.assertIn(url, results[0].text)
