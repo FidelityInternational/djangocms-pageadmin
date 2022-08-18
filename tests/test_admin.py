@@ -1,5 +1,4 @@
 import datetime
-
 from functools import partial
 from unittest import skip
 from unittest.mock import MagicMock, patch
@@ -31,6 +30,7 @@ from djangocms_pageadmin.test_utils.factories import (
     SiteFactory,
     UserFactory,
 )
+
 
 parse_html = partial(BeautifulSoup, features="lxml")
 
