@@ -103,7 +103,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         language = get_language()
         returned_queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         """
-        While the returned_queryset contains searches for title, without filtering on the original, we are unable to 
+        While the returned_queryset contains searches for title, without filtering on the original, we are unable to
         search for symbols within the URL, such as '-'. Therefore, filter the original queryset and combine.
         Language must also be filtered in order to prevent hits on PageContent which have URLS in multiple languages.
         """
