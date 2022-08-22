@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.2.2 (2022-08-22)
+==================
 * feat: PageContent search checks PageUrls
 * feat: CSV export functionality added to the change list
 
