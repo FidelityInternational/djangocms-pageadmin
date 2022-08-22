@@ -6,6 +6,7 @@ Unreleased
 ==========
 * feat: PageContent search checks PageUrls
 * feat: CSV export functionality added to the change list
+* fix: Added CONFIRM_VERSION4 in test_settings to show intend of using v4
 
 1.1.2 (2022-07-20)
 ==================

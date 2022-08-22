@@ -60,6 +60,8 @@ HELPER_SETTINGS = {
     ),
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
+    # Due to a recent temporary change in develop-4, we now need to confirm that we intend to use v4
+    "CONFIRM_VERSION4": True,
 }
 
 
