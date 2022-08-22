@@ -61,7 +61,6 @@ HELPER_SETTINGS = {
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
     # Due to a recent temporary change in develop-4, we now need to confirm that we intend to use v4
-    # https://github.com/django-cms/django-cms/commit/ff6cb9b5dced92eadef62694e989d601e9475b30
     "CMS_CONFIRM_VERSION4": True,
 }
 
