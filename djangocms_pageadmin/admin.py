@@ -6,7 +6,7 @@ from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -17,7 +17,7 @@ from django.template.loader import render_to_string
 from django.urls import re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
-from django.utils.translation import gettext_lazy as _, override
+from django.utils.translation import get_language, gettext_lazy as _, override
 from django.views.decorators.http import require_POST
 
 from cms import api
@@ -98,6 +98,38 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 .prefetch_related("content"),
             )
         )
+
+    def get_search_results(self, request, queryset, search_term):
+        """
+        Override the ModelAdmin method for fetching search results to filter for urls associated with the pagecontent
+        :param request: PageContent Admin request
+        :param queryset: PageContent queryset
+        :param search_term: Term to be searched for
+        :return: results
+        """
+        language = get_language()
+        returned_queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        """
+        While the returned_queryset contains searches for title, without filtering on the original, we are unable to
+        search for symbols within the URL, such as '-'. Therefore, filter the original queryset and combine.
+        Language must also be filtered in order to prevent hits on PageContent which have URLS in multiple languages.
+        """
+        returned_queryset |= queryset.filter(
+            Q(page__urls__slug__icontains=search_term) | Q(page__urls__path__icontains=search_term),
+            page__urls__language=language
+        )
+
+        """
+        This is a workaround to avoid replicating the functionality of get_search_results in Django, which checks
+        whether a queryset is distinct based on search_fields. We cannot use the standard search_fields configuration,
+        because this would not be language aware, and would results in hits on URLs in languages different to the users.
+        As we are looking across reverse FK relations, we know that this method should always return use_distinct=True,
+        therefore if a search has been made, set it as such.
+        https://github.com/django/django/blob/2a62cdcfec85938f40abb2e9e6a9ff497e02afe8/django/contrib/admin/options.py#L980 # NOQA
+        """
+        if search_term:
+            use_distinct = True
+        return returned_queryset, use_distinct
 
     def get_version(self, obj):
         return obj.versions.all()[0]
