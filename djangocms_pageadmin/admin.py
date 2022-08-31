@@ -34,7 +34,12 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
-from .filters import AuthorFilter, LanguageFilter, TemplateFilter, UnpublishedFilter
+from .filters import (
+    AuthorFilter,
+    LanguageFilter,
+    TemplateFilter,
+    UnpublishedFilter,
+)
 from .forms import DuplicateForm
 from .helpers import proxy_model
 
