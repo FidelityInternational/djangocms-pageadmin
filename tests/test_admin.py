@@ -150,7 +150,7 @@ class FiltersTestCase(CMSTestCase):
         page_author_1 = PageVersionFactory(content__template="page.html", content__language="en", created_by=author1)
         page_author_2 = PageVersionFactory(content__template="page.html", content__language="en", created_by=author2)
 
-        author_selection = f"?created_by={author1.pk}"
+        author_param = f"?created_by={author1.pk}"
         base_url = self.get_admin_url(PageContent, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -168,7 +168,7 @@ class FiltersTestCase(CMSTestCase):
         )
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(base_url + author_selection)
+            response = self.client.get(base_url + author_param)
 
         queryset_result = response.context_data['cl'].result_list
 
