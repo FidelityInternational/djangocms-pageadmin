@@ -141,6 +141,46 @@ class FiltersTestCase(CMSTestCase):
         self.assertSetEqual(set(response_template_1.context["cl"].queryset), set(template_1_pages))
         self.assertSetEqual(set(response_template_2.context["cl"].queryset), set(template_2_pages))
 
+    def test_author_filter(self):
+        """
+        Author filter should only show selected author's results
+        """
+        author1 = UserFactory()
+        author2 = UserFactory()
+        page_author_1 = PageVersionFactory(content__template="page.html", content__language="en", created_by=author1)
+        page_author_2 = PageVersionFactory(content__template="page.html", content__language="en", created_by=author2)
+
+        author_selection = f"?created_by={author1.pk}"
+        base_url = self.get_admin_url(PageContent, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(base_url)
+
+        queryset_result = response.context_data['cl'].result_list
+
+        # The results should not be filtered
+        self.assertTrue(len(queryset_result), 2)
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [page_author_1.pk, page_author_2.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(base_url + author_selection)
+
+        queryset_result = response.context_data['cl'].result_list
+
+        # When an author is selected in the filter only the author selected pages are shown
+        self.assertTrue(len(queryset_result), 1)
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [page_author_1.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
 
 class ListActionsTestCase(CMSTestCase):
     def setUp(self):

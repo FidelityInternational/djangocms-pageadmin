@@ -34,7 +34,7 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
-from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
+from .filters import AuthorFilter, LanguageFilter, TemplateFilter, UnpublishedFilter
 from .forms import DuplicateForm
 from .helpers import proxy_model
 
@@ -51,7 +51,7 @@ require_POST = method_decorator(require_POST)
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
-    list_filter = (LanguageFilter, UnpublishedFilter, TemplateFilter)
+    list_filter = (LanguageFilter, UnpublishedFilter, TemplateFilter, AuthorFilter)
     _list_display = [
         "get_title",
         "url",

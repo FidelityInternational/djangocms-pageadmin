@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.utils.encoding import force_text
 from django.utils.translation import gettext_lazy as _
 
 from cms.utils.conf import get_cms_setting
@@ -94,3 +96,30 @@ class TemplateFilter(admin.SimpleListFilter):
                 ),
                 "display": title,
             }
+
+
+class AuthorFilter(admin.SimpleListFilter):
+    """
+    An author filter limited to those users who have added expiration dates
+    """
+
+    title = _("Version Author")
+    parameter_name = "created_by"
+
+    def lookups(self, request, model_admin):
+        User = get_user_model()
+        options = []
+        qs = model_admin.get_queryset(request)
+        authors = qs.values_list('versions__created_by', flat=True).distinct()
+        users = User.objects.filter(pk__in=authors)
+
+        for user in users:
+            options.append(
+                (force_text(user.pk), user.get_full_name() or user.get_username())
+            )
+        return options
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(versions__created_by=self.value()).distinct()
+        return queryset

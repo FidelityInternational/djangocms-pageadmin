@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Author filter added to admin
 
 1.2.2 (2022-08-22)
 ==================
