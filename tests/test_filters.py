@@ -6,9 +6,11 @@ from cms.test_utils.testcases import CMSTestCase
 from cms.utils import get_current_site
 from cms.utils.conf import get_cms_setting
 
-from djangocms_pageadmin.test_utils.factories import PageContentWithVersionFactory, SiteFactory
-
 from djangocms_versioning.constants import UNPUBLISHED
+from djangocms_pageadmin.test_utils.factories import (
+    PageContentWithVersionFactory,
+    SiteFactory,
+)
 
 
 class FiltersTestCase(CMSTestCase):
