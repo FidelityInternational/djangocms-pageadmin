@@ -5,9 +5,9 @@ from django.utils.translation import gettext_lazy as _
 from cms.utils import get_current_site
 from cms.utils.i18n import get_language_tuple, get_site_language_from_request
 
-from .helpers import get_default_templates, get_settings_templates
-
 from djangocms_versioning.constants import UNPUBLISHED
+
+from .helpers import get_default_templates, get_settings_templates
 
 
 class LanguageFilter(admin.SimpleListFilter):
