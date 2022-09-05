@@ -82,6 +82,8 @@ class TemplateFilterTestCase(CMSTestCase):
         from django.contrib.sites.models import Site
         cls.site_1 = Site(id=1, domain='domain.com', name='Domain site')
         cls.site_1.save()
+        cls.site_2 = Site(id=2, domain='example.com', name='Example site')
+        cls.site_2.save()
 
     def test_template_filter(self):
         template_1 = get_cms_setting('TEMPLATES')[0][0]
@@ -116,5 +118,20 @@ class TemplateFilterTestCase(CMSTestCase):
 
         actual_lookup_choices = response_default.context_data["cl"].filter_specs[2].lookup_choices
         expected_lookup_choices = site_templates.get(current_site.domain, None)
+
+        self.assertEqual(actual_lookup_choices[0], expected_lookup_choices[0])
+
+    @override_settings(SITE_ID=2)
+    def test_templates_filtered_by_site_without_templates(self):
+        """
+        Sites which are not configured in templates, should return default a template list
+        """
+        base_url = self.get_admin_url(PageContent, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response_default = self.client.get(base_url)
+
+        actual_lookup_choices = response_default.context_data["cl"].filter_specs[2].lookup_choices
+        expected_lookup_choices = get_cms_setting('TEMPLATES')
 
         self.assertEqual(actual_lookup_choices[0], expected_lookup_choices[0])

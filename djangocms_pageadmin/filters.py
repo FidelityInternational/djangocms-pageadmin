@@ -3,8 +3,9 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from cms.utils import get_current_site
-from cms.utils.conf import get_cms_setting
 from cms.utils.i18n import get_language_tuple, get_site_language_from_request
+
+from .helpers import get_default_templates, get_settings_templates
 
 from djangocms_versioning.constants import UNPUBLISHED
 
@@ -72,30 +73,14 @@ class TemplateFilter(admin.SimpleListFilter):
     title = _("template")
     parameter_name = "template"
 
-    def get_settings_templates(self, templates):
-        """
-        Returns lookup choices from the configured templates
-        :param templates:
-        :return: Lookup choices
-        """
-        return [template for template in templates]
-
-    def get_default_templates(self):
-        """
-        Returns lookup choices from the default templates
-        :return: Lookup choices
-        """
-        for value, name in get_cms_setting('TEMPLATES'):
-            yield (value, name)
-
     def lookups(self, request, model_admin):
         site = get_current_site()
         site_templates = getattr(settings, "SITE_TEMPLATES", {})
         templates = site_templates.get(site.domain, None)
         if templates:
-            return self.get_settings_templates(templates)
+            return get_settings_templates(templates)
         else:
-            return self.get_default_templates()
+            return get_default_templates()
 
     def queryset(self, request, queryset):
         template = self.value()
