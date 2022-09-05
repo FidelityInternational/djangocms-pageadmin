@@ -18,7 +18,7 @@ from cms.utils.conf import get_cms_setting
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
-from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
+from djangocms_versioning.constants import ARCHIVED, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
@@ -29,7 +29,6 @@ from djangocms_pageadmin.test_utils.factories import (
     PageUrlFactory,
     PageVersionFactory,
     PlaceholderFactory,
-    SiteFactory,
     UserFactory,
 )
 
