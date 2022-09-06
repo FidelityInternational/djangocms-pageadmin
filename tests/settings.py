@@ -62,6 +62,12 @@ HELPER_SETTINGS = {
     "LANGUAGE_CODE": "en",
     # Due to a recent temporary change in develop-4, we now need to confirm that we intend to use v4
     "CMS_CONFIRM_VERSION4": True,
+    "SITE_TEMPLATES": {
+        "domain.com": (
+            ("default_uk.html", "UK Default",),
+            ("uktools.html", "UK Tools With Tool Base",),
+        ),
+    }
 }
 
 

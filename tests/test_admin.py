@@ -18,7 +18,7 @@ from cms.utils.conf import get_cms_setting
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
-from djangocms_versioning.constants import ARCHIVED, PUBLISHED, UNPUBLISHED
+from djangocms_versioning.constants import ARCHIVED, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
@@ -29,7 +29,6 @@ from djangocms_pageadmin.test_utils.factories import (
     PageUrlFactory,
     PageVersionFactory,
     PlaceholderFactory,
-    SiteFactory,
     UserFactory,
 )
 
@@ -63,123 +62,6 @@ class AdminTestCase(CMSTestCase):
             url = '{url}?o={order}'.format(url=url, order=(order + 1))
             response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-
-
-class FiltersTestCase(CMSTestCase):
-    def test_queryset_is_filtered_by_current_site(self):
-        site1 = SiteFactory()
-        site2 = SiteFactory()
-        site1_pagecontents = PageContentWithVersionFactory.create_batch(
-            2, page__node__site=site1, language="en"
-        )
-        site2_pagecontents = [
-            PageContentWithVersionFactory(page__node__site=site2, language="en")
-        ]
-        model = PageContent
-        url = self.get_admin_url(model, "changelist")
-        with self.login_user_context(self.get_superuser()):
-            with self.settings(SITE_ID=site1.pk):
-                response1 = self.client.get(url)
-            with self.settings(SITE_ID=site2.pk):
-                response2 = self.client.get(url)
-        self.assertEqual(response1.status_code, 200)
-        self.assertEqual(response2.status_code, 200)
-        self.assertEqual(set(site1_pagecontents), set(response1.context["cl"].queryset))
-        self.assertEqual(set(site2_pagecontents), set(response2.context["cl"].queryset))
-
-    def test_language_filter(self):
-        expected_en = PageContentWithVersionFactory.create_batch(3, language="en")
-        expected_de = PageContentWithVersionFactory.create_batch(3, language="de")
-        model = PageContent
-        base_url = self.get_admin_url(model, "changelist")
-        with self.login_user_context(self.get_superuser()):
-            # en is the default language configured for the site
-            response_default = self.client.get(base_url)
-            qs_default = response_default.context["cl"].queryset
-            response_en = self.client.get(base_url + "?language=en")
-            qs_en = response_en.context["cl"].queryset
-            response_de = self.client.get(base_url + "?language=de")
-            qs_de = response_de.context["cl"].queryset
-
-        self.assertEqual(set(qs_default), set(expected_en))
-        self.assertEqual(set(qs_en), set(expected_en))
-        self.assertEqual(set(qs_de), set(expected_de))
-
-    def test_unpublished_filter(self):
-        expected = PageContentWithVersionFactory.create_batch(3, language="en")
-        expected_unpublished = PageContentWithVersionFactory.create_batch(
-            2, language="en", version__state=UNPUBLISHED
-        )
-        model = PageContent
-        base_url = self.get_admin_url(model, "changelist")
-        with self.login_user_context(self.get_superuser()):
-            # en is the default language configured for the site
-            response_default = self.client.get(base_url)
-            qs_default = response_default.context["cl"].queryset
-            response_unpublished = self.client.get(base_url + "?unpublished=1")
-            qs_unpublished = response_unpublished.context["cl"].queryset
-
-        self.assertEqual(set(qs_default), set(expected))
-        self.assertEqual(set(qs_unpublished), set(expected_unpublished))
-
-    def test_template_filter(self):
-        template_1 = get_cms_setting('TEMPLATES')[0][0]
-        template_2 = get_cms_setting('TEMPLATES')[1][0]
-        template_1_pages = PageContentWithVersionFactory.create_batch(3, template=template_1, language="en")
-        template_2_pages = PageContentWithVersionFactory.create_batch(3, template=template_2, language="en")
-        base_url = self.get_admin_url(PageContent, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            # All / No templates filtered is the default
-            response_default = self.client.get(base_url)
-            # fullwidth template set
-            response_template_1 = self.client.get(base_url + "?template={}".format(template_1))
-            # page template set
-            response_template_2 = self.client.get(base_url + "?template={}".format(template_2))
-
-        self.assertSetEqual(set(response_default.context["cl"].queryset), set(template_1_pages) | set(template_2_pages))
-        self.assertSetEqual(set(response_template_1.context["cl"].queryset), set(template_1_pages))
-        self.assertSetEqual(set(response_template_2.context["cl"].queryset), set(template_2_pages))
-
-    def test_author_filter(self):
-        """
-        Author filter should only show selected author's results
-        """
-        author1 = UserFactory()
-        author2 = UserFactory()
-        page_author_1 = PageVersionFactory(content__template="page.html", content__language="en", created_by=author1)
-        page_author_2 = PageVersionFactory(content__template="page.html", content__language="en", created_by=author2)
-
-        author_param = f"?created_by={author1.pk}"
-        base_url = self.get_admin_url(PageContent, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(base_url)
-
-        queryset_result = response.context_data['cl'].result_list
-
-        # The results should not be filtered
-        self.assertTrue(len(queryset_result), 2)
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [page_author_1.pk, page_author_2.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(base_url + author_param)
-
-        queryset_result = response.context_data['cl'].result_list
-
-        # When an author is selected in the filter only the author selected pages are shown
-        self.assertTrue(len(queryset_result), 1)
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [page_author_1.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
 
 
 class ListActionsTestCase(CMSTestCase):
