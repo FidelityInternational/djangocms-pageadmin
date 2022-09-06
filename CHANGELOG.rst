@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Template filter choices filtered by site. Moved filter test cases to own file
 
 1.2.2 (2022-08-22)
 ==================
