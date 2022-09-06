@@ -124,7 +124,7 @@ class TemplateFilterTestCase(CMSTestCase):
     @override_settings(SITE_ID=2)
     def test_templates_filtered_by_site_without_templates(self):
         """
-        Sites which are not configured in templates, should return default a template list
+        Sites which are not configured in templates, should return a default template list
         """
         base_url = self.get_admin_url(PageContent, "changelist")
 
