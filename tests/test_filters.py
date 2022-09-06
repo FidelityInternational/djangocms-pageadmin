@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.test import override_settings
 
 from cms.models import PageContent
@@ -79,7 +80,6 @@ class UnpublishedTestCase(CMSTestCase):
 class TemplateFilterTestCase(CMSTestCase):
     @classmethod
     def setUpTestData(cls):
-        from django.contrib.sites.models import Site
         cls.site_1 = Site(id=1, domain='domain.com', name='Domain site')
         cls.site_1.save()
         cls.site_2 = Site(id=2, domain='example.com', name='Example site')
