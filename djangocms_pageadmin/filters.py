@@ -3,11 +3,10 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from cms.utils import get_current_site
+from cms.utils.conf import get_cms_setting
 from cms.utils.i18n import get_language_tuple, get_site_language_from_request
 
 from djangocms_versioning.constants import UNPUBLISHED
-
-from .helpers import get_default_templates, get_settings_templates
 
 
 class LanguageFilter(admin.SimpleListFilter):
@@ -78,9 +77,9 @@ class TemplateFilter(admin.SimpleListFilter):
         site_templates = getattr(settings, "SITE_TEMPLATES", {})
         templates = site_templates.get(site.domain, None)
         if templates:
-            return get_settings_templates(templates)
+            return templates
         else:
-            return get_default_templates()
+            return get_cms_setting('TEMPLATES')
 
     def queryset(self, request, queryset):
         template = self.value()
