@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+1.3.2 (2022-09-06)
+==================
 * feat: Author filter added to admin
 * feat: Template filter choices filtered by site. Moved filter test cases to own file
 
