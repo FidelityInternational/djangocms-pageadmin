@@ -5,7 +5,6 @@ from cms.toolbar.items import ButtonList
 from djangocms_version_locking.monkeypatch.cms_toolbars import (
     ButtonWithAttributes,
 )
-
 from djangocms_versioning import admin
 from djangocms_versioning.cms_toolbars import VersioningToolbar
 from djangocms_versioning.models import StateTracking
