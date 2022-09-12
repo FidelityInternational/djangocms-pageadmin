@@ -201,7 +201,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             # CAVEAT : get_edit_link Commented out to hide edit link from change list
             # Edit page content can be accessed from preview
             # Below line should be uncommented  change is added to open the edit link new tab
-            # self._get_edit_link,
+            self._get_edit_link,
             self._get_duplicate_link,
             self._get_unpublish_link,
             self._get_manage_versions_link,
