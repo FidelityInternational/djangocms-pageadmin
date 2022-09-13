@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Replacing created with published date for the versioning changelist
 
 1.3.0 (2022-09-06)
 ==================

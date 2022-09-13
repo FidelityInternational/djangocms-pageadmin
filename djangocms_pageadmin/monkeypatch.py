@@ -57,20 +57,6 @@ published_date.short_description = PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
 admin.VersionAdmin.published_date = published_date
 
 
-# def get_list_display(func):
-#     """
-#     Register the published date field with the Versioning Admin
-#     """
-#     def inner(self, request):
-#         original_list_display = func(self, request)
-#         list_display_list = list(original_list_display)
-#         # Removing created date from versioning changelist
-#         del list_display_list[1]
-#         new_list_display = tuple(list_display_list)
-#         modified_date = new_list_display.index('modified')
-#         return new_list_display[:modified_date] + ('published_date',) + new_list_display[modified_date:]
-#     return inner
-
 def get_list_display(func):
     """
     Register the published date field with Versioning Admin
