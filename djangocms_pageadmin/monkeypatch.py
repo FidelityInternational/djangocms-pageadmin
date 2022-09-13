@@ -9,6 +9,8 @@ from djangocms_versioning import admin
 from djangocms_versioning.cms_toolbars import VersioningToolbar
 from djangocms_versioning.models import StateTracking
 
+from djangocms_pageadmin.constants import PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
+
 
 def new_view_published_button(func):
     """
@@ -51,7 +53,7 @@ def published_date(self, obj):
     return ""
 
 
-published_date.short_description = "Published Date"
+published_date.short_description = PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
 admin.VersionAdmin.published_date = published_date
 
 

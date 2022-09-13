@@ -1,3 +1,5 @@
+from django.contrib import admin
+from django.test import RequestFactory
 from django.utils.text import slugify
 
 from cms.test_utils.testcases import CMSTestCase
@@ -5,6 +7,7 @@ from cms.toolbar.utils import get_object_preview_url
 
 from djangocms_versioning.test_utils.factories import PageUrlFactory
 
+from djangocms_pageadmin.constants import PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
 from djangocms_pageadmin.test_utils import factories
 
 
@@ -33,3 +36,20 @@ class ToolbarMonkeyPatchTestCase(CMSTestCase):
         self.assertContains(
             response,  'class="cms-btn cms-btn cms-btn-switch-save" target="_blank" >View Published</a>'
         )
+
+
+class VersioningIntegrationTestCase(CMSTestCase):
+
+    def test_versioning_changelist_published_date(self):
+        """
+        Monkey patch should add expiry column and values to admin menu list display
+        """
+        published_version = factories.PageVersionFactory(content__template="page.html", content__language="en")
+        version_admin = admin.site._registry[published_version.versionable.version_model_proxy]
+
+        request = RequestFactory().get("/")
+        list_display = version_admin.get_list_display(request)
+
+        # Published date field should have been added by the monkeypatch
+        self.assertIn('published_date', list_display)
+        self.assertEqual(PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL, version_admin.published_date.short_description)
