@@ -48,7 +48,8 @@ VersioningToolbar._add_view_published_button = new_view_published_button(Version
 
 def published_date(self, obj):
     version = StateTracking.objects.filter(version_id=obj.pk)
-    if hasattr(version.first(), "new_state") and version.first().new_state == "published":
+    new_state = getattr(version.first(), "new_state", None)
+    if new_state == "published":
         return version.first().date
     return ""
 
