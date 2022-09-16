@@ -8,6 +8,7 @@ from cms.toolbar.utils import get_object_preview_url
 from djangocms_versioning.test_utils.factories import PageUrlFactory
 
 from djangocms_pageadmin.constants import PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
+from djangocms_pageadmin.monkeypatch import get_list_display
 from djangocms_pageadmin.test_utils import factories
 
 
@@ -39,7 +40,6 @@ class ToolbarMonkeyPatchTestCase(CMSTestCase):
 
 
 class VersioningIntegrationTestCase(CMSTestCase):
-
     def test_versioning_changelist_published_date(self):
         """
         Monkey patch should add expiry column and values to admin menu list display
@@ -53,3 +53,29 @@ class VersioningIntegrationTestCase(CMSTestCase):
         # Published date field should have been added by the monkeypatch
         self.assertIn('published_date', list_display)
         self.assertEqual(PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL, version_admin.published_date.short_description)
+
+    def test_when_created_not_in_list_display(self):
+        """
+        Monkey patch should return the default list display when created is available
+        """
+        def mock_get_list_display(self, request):
+            return ["foo", "bar"]
+
+        # Return the inner function from our monkeypatch
+        inner = get_list_display(mock_get_list_display)
+        result = inner("self", "request")
+
+        self.assertEqual(result, ["foo", "bar"])
+
+    def test_when_created_is_in_list_display(self):
+        """
+        Monkey patch should replace created with published date when created is available
+        """
+        def mock_get_list_display(self, request):
+            return ["foo", "created", "bar"]
+
+        # Return the inner function from our monkeypatch
+        inner = get_list_display(mock_get_list_display)
+        result = inner("self", "request")
+
+        self.assertEqual(result, ["foo", "published_date", "bar"])

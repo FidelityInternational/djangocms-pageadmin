@@ -69,12 +69,12 @@ def get_list_display(func):
         try:
             created_index = list_display_list.index("created")
         except ValueError:
-            # if created is missing return the original list to avoid an error
+            # If created is missing return the original list to avoid an error
             return original_list_display
 
-        # change the value at the correct index
+        # Change the value at the correct index
         list_display_list[created_index] = "published_date"
-        # get_list_display accepts a list so can be returned directly
+        # Get_list_display accepts a list so can be returned directly
         return list_display_list
     return inner
 
