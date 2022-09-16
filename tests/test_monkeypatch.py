@@ -52,6 +52,7 @@ class VersioningIntegrationTestCase(CMSTestCase):
 
         # Published date field should have been added by the monkeypatch
         self.assertIn('published_date', list_display)
+        self.assertNotIn('created', list_display)
         self.assertEqual(PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL, version_admin.published_date.short_description)
 
     def test_when_created_not_in_list_display(self):
