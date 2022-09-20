@@ -42,7 +42,7 @@ class ToolbarMonkeyPatchTestCase(CMSTestCase):
 class VersioningIntegrationTestCase(CMSTestCase):
     def test_versioning_changelist_published_date(self):
         """
-        Monkey patch should add expiry column and values to admin menu list display
+        Monkey patch should add published date column to admin menu list display
         """
         published_version = factories.PageVersionFactory(content__template="page.html", content__language="en")
         version_admin = admin.site._registry[published_version.versionable.version_model_proxy]
@@ -54,6 +54,29 @@ class VersioningIntegrationTestCase(CMSTestCase):
         self.assertIn('published_date', list_display)
         self.assertNotIn('created', list_display)
         self.assertEqual(PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL, version_admin.published_date.short_description)
+
+    def test_versioning_changelist_published_date_populated(self):
+        """
+        Monkey patch should add published date value to the admin menu list display
+        """
+        version = factories.PageVersionFactory()
+        version.publish(self.get_superuser())
+
+        url = self.get_admin_url(version.versionable.version_model_proxy, "changelist")
+        url += "?page=" + str(version.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(url, follow=True)
+
+        self.assertIn("cl", response.context)
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [version.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+        # Pubslished date should not be empty for a published page
+        self.assertNotContains(response, '<td class="field-published_date nowrap"></td>')
 
     def test_when_created_not_in_list_display(self):
         """
