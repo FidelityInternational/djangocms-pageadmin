@@ -75,7 +75,7 @@ class VersioningIntegrationTestCase(CMSTestCase):
             transform=lambda x: x.pk,
             ordered=False,
         )
-        # Pubslished date should not be empty for a published page
+        # Published date should not be empty for a published page
         self.assertNotContains(response, '<td class="field-published_date nowrap"></td>')
 
     def test_when_created_not_in_list_display(self):
