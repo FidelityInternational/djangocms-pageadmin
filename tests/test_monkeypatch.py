@@ -80,7 +80,7 @@ class VersioningIntegrationTestCase(CMSTestCase):
 
     def test_when_created_not_in_list_display(self):
         """
-        Monkey patch should return the default list display when created is available
+        Monkey patch should return the default list display when created is not available
         """
         def mock_get_list_display(self, request):
             return ["foo", "bar"]
