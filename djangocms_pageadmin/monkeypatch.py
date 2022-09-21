@@ -5,7 +5,11 @@ from cms.toolbar.items import ButtonList
 from djangocms_version_locking.monkeypatch.cms_toolbars import (
     ButtonWithAttributes,
 )
+from djangocms_versioning import admin
 from djangocms_versioning.cms_toolbars import VersioningToolbar
+from djangocms_versioning.models import StateTracking
+
+from djangocms_pageadmin.constants import PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
 
 
 def new_view_published_button(func):
@@ -40,3 +44,39 @@ def new_view_published_button(func):
 
 
 VersioningToolbar._add_view_published_button = new_view_published_button(VersioningToolbar._add_view_published_button)
+
+
+def published_date(self, obj):
+    version = StateTracking.objects.filter(version_id=obj.pk)
+    new_state = getattr(version.first(), "new_state", None)
+    if new_state == "published":
+        return version.first().date
+    return ""
+
+
+published_date.short_description = PAGEADMIN_PUBLISHED_DATE_FIELD_LABEL
+admin.VersionAdmin.published_date = published_date
+
+
+def get_list_display(func):
+    """
+    Register the published date field with Versioning Admin
+    """
+    def inner(self, request):
+        original_list_display = func(self, request)
+        list_display_list = list(original_list_display)
+
+        try:
+            created_index = list_display_list.index("created")
+        except ValueError:
+            # If created is missing return the original list to avoid an error
+            return original_list_display
+
+        # Change the value at the correct index
+        list_display_list[created_index] = "published_date"
+        # Get_list_display accepts a list so can be returned directly
+        return list_display_list
+    return inner
+
+
+admin.VersionAdmin.get_list_display = get_list_display(admin.VersionAdmin.get_list_display)
