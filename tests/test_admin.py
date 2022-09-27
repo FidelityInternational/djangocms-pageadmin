@@ -18,6 +18,7 @@ from cms.utils.conf import get_cms_setting
 from cms.utils.plugins import downcast_plugins
 
 from bs4 import BeautifulSoup
+from djangocms_moderation.admin_actions import add_items_to_collection
 from djangocms_versioning.constants import ARCHIVED, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
@@ -893,3 +894,40 @@ class PageAdminCsvExportFileTestCase(CMSTestCase):
 
             self.assertEqual(result, expire_at)
             mock_get_version.assert_called_once_with(page_content)
+
+
+class TestPageContentAdminActions(CMSTestCase):
+
+    def test_get_actions_when_moderation_is_installed(self):
+        """
+        With djangocms_moderation installed, the PageContentAdmin actions should include the action to add multiple
+        items to a collection.
+        """
+        pagecontent_admin = PageContentAdmin(PageContent, admin.AdminSite())
+        request = self.get_request('/')
+
+        actions = pagecontent_admin.get_actions(request)
+        self.assertIn("add_items_to_collection", actions)
+        self.assertEqual(actions, {
+            "add_items_to_collection": (
+                add_items_to_collection,
+                "add_items_to_collection",
+                add_items_to_collection.short_description
+            )
+        })
+
+    @patch("django.apps.apps.is_installed")
+    def test_get_actions_when_moderation_not_installed(self, is_installed):
+        """
+        With djangocms_moderation not installed, the PageContentAdmin actions should include the action to add multiple
+        items to a collection. As djangocms_moderation is installed in the test environment, a mock is used to simulate
+        it not being installed.
+        """
+        is_installed.return_value = False
+        pagecontent_admin = PageContentAdmin(PageContent, admin.AdminSite())
+        request = self.get_request('/')
+
+        actions = pagecontent_admin.get_actions(request)
+        self.assertNotIn("add_items_to_collection", actions)
+        self.assertEqual(actions, {})
+        is_installed.assert_called_once_with("djangocms_moderation")

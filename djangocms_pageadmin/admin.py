@@ -1,6 +1,7 @@
 import csv
 import datetime
 
+from django.apps import apps
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
@@ -103,6 +104,24 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 .prefetch_related("content"),
             )
         )
+
+    def get_actions(self, request):
+        """
+        If djangocms-moderation is installed, adds admin action to allow multiple pages to be added to a moderation
+        collection
+        """
+        actions = super().get_actions(request)
+        if not apps.is_installed("djangocms_moderation"):
+            return actions
+
+        from djangocms_moderation.admin_actions import \
+            add_items_to_collection  # noqa
+        actions["add_items_to_collection"] = (
+            add_items_to_collection,
+            "add_items_to_collection",
+            add_items_to_collection.short_description
+        )
+        return actions
 
     def get_search_results(self, request, queryset, search_term):
         """
