@@ -1,7 +1,6 @@
 import csv
 import datetime
 
-from django.apps import apps
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
@@ -42,7 +41,7 @@ from .filters import (
     UnpublishedFilter,
 )
 from .forms import DuplicateForm
-from .helpers import proxy_model
+from .helpers import is_moderation_enabled, proxy_model
 
 
 try:
@@ -107,15 +106,19 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def get_actions(self, request):
         """
-        If djangocms-moderation is installed, adds admin action to allow multiple pages to be added to a moderation
-        collection
+        If djangocms-moderation is enabled, adds admin action to allow multiple pages to be added to a moderation
+        collection.
+
+        :param request: Request object
+        :returns: dict of admin actions
         """
         actions = super().get_actions(request)
-        if not apps.is_installed("djangocms_moderation"):
+        if not is_moderation_enabled():
             return actions
 
         from djangocms_moderation.admin_actions import \
             add_items_to_collection  # noqa
+
         actions["add_items_to_collection"] = (
             add_items_to_collection,
             "add_items_to_collection",

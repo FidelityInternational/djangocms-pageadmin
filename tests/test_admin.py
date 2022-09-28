@@ -898,9 +898,9 @@ class PageAdminCsvExportFileTestCase(CMSTestCase):
 
 class TestPageContentAdminActions(CMSTestCase):
 
-    def test_get_actions_when_moderation_is_installed(self):
+    def test_get_actions_when_moderation_is_enabled(self):
         """
-        With djangocms_moderation installed, the PageContentAdmin actions should include the action to add multiple
+        When djangocms_moderation is enabled, the PageContentAdmin actions should include the action to add multiple
         items to a collection.
         """
         pagecontent_admin = PageContentAdmin(PageContent, admin.AdminSite())
@@ -916,18 +916,18 @@ class TestPageContentAdminActions(CMSTestCase):
             )
         })
 
-    @patch("django.apps.apps.is_installed")
-    def test_get_actions_when_moderation_not_installed(self, is_installed):
+    @patch("djangocms_pageadmin.admin.is_moderation_enabled")
+    def test_get_actions_when_moderation_not_enabled(self, is_moderation_enabled):
         """
-        With djangocms_moderation not installed, the PageContentAdmin actions should include the action to add multiple
-        items to a collection. As djangocms_moderation is installed in the test environment, a mock is used to simulate
-        it not being installed.
+        When djangocms_moderation is not enabled, the PageContentAdmin actions should include the action to add multiple
+        items to a collection.
         """
-        is_installed.return_value = False
+        is_moderation_enabled.return_value = False
         pagecontent_admin = PageContentAdmin(PageContent, admin.AdminSite())
         request = self.get_request('/')
 
         actions = pagecontent_admin.get_actions(request)
+
+        is_moderation_enabled.assert_called_once()
         self.assertNotIn("add_items_to_collection", actions)
         self.assertEqual(actions, {})
-        is_installed.assert_called_once_with("djangocms_moderation")
