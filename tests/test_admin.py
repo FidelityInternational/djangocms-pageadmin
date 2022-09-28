@@ -919,8 +919,8 @@ class TestPageContentAdminActions(CMSTestCase):
     @patch("djangocms_pageadmin.admin.is_moderation_enabled")
     def test_get_actions_when_moderation_not_enabled(self, is_moderation_enabled):
         """
-        When djangocms_moderation is not enabled, the PageContentAdmin actions should include the action to add multiple
-        items to a collection.
+        When djangocms_moderation is not enabled, the PageContentAdmin actions should not include the action to add
+        multiple items to a collection.
         """
         is_moderation_enabled.return_value = False
         pagecontent_admin = PageContentAdmin(PageContent, admin.AdminSite())
