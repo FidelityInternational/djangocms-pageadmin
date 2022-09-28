@@ -41,7 +41,7 @@ from .filters import (
     UnpublishedFilter,
 )
 from .forms import DuplicateForm
-from .helpers import proxy_model
+from .helpers import is_moderation_enabled, proxy_model
 
 
 try:
@@ -103,6 +103,28 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 .prefetch_related("content"),
             )
         )
+
+    def get_actions(self, request):
+        """
+        If djangocms-moderation is enabled, adds admin action to allow multiple pages to be added to a moderation
+        collection.
+
+        :param request: Request object
+        :returns: dict of admin actions
+        """
+        actions = super().get_actions(request)
+        if not is_moderation_enabled():
+            return actions
+
+        from djangocms_moderation.admin_actions import \
+            add_items_to_collection  # noqa
+
+        actions["add_items_to_collection"] = (
+            add_items_to_collection,
+            "add_items_to_collection",
+            add_items_to_collection.short_description
+        )
+        return actions
 
     def get_search_results(self, request, queryset, search_term):
         """
