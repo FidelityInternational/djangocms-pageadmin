@@ -5,7 +5,7 @@ Changelog
 Unreleased
 ==========
 
-1.5.0 (2022-09-21)
+1.5.0 (2022-09-28)
 ==================
 * feat: Adds admin action to add multiple items to a collection when moderation is installed
 
