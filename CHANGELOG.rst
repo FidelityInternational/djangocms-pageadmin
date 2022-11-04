@@ -4,6 +4,7 @@ Changelog
 
 Unreleased
 ==========
+* feat: Enabled edit button in Page Admin
 
 1.5.0 (2022-09-28)
 ==================
