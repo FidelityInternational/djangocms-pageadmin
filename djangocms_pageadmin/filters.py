@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from cms.utils.conf import get_cms_setting
@@ -45,10 +46,11 @@ class UnpublishedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         show = self.value()
-        if show is "1":
-            return queryset.filter(versions__state=UNPUBLISHED)
-        else:
-            return queryset.exclude(versions__state=UNPUBLISHED)
+        q = Q(versions__state=UNPUBLISHED)
+        queryset = queryset.filter(
+            Q(versions__pk__isnull=False) & (q if show == "1" else ~q)
+        )
+        return queryset
 
     def choices(self, changelist):
         yield {
@@ -71,7 +73,7 @@ class TemplateFilter(admin.SimpleListFilter):
     parameter_name = "template"
 
     def lookups(self, request, model_admin):
-        for value, name in get_cms_setting('TEMPLATES'):
+        for value, name in get_cms_setting("TEMPLATES"):
             yield (value, name)
 
     def queryset(self, request, queryset):
