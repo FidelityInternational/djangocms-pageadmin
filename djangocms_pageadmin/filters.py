@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils.encoding import force_text
 from django.utils.translation import gettext_lazy as _
@@ -49,10 +50,11 @@ class UnpublishedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         show = self.value()
-        if show == "1":
-            return queryset.filter(versions__state=UNPUBLISHED)
-        else:
-            return queryset.exclude(versions__state=UNPUBLISHED)
+        q = Q(versions__state=UNPUBLISHED)
+        queryset = queryset.filter(
+            Q(versions__pk__isnull=False) & (q if show == "1" else ~q)
+        )
+        return queryset
 
     def choices(self, changelist):
         yield {
