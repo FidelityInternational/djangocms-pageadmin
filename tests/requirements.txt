@@ -1,6 +1,0 @@
-factory_boy
-beautifulsoup4
-lxml
-djangocms-text-ckeditor
-git+git://github.com/divio/djangocms-versioning.git#egg=djangocms-versioning
-git+git://github.com/FidelityInternational/djangocms-version-locking.git#egg=djangocms-version-locking

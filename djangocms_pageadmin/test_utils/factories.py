@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
-from cms.models import Page, PageContent, Placeholder, TreeNode
+from cms.models import Page, PageContent, PageUrl, Placeholder, TreeNode
 
 import factory
 from djangocms_versioning.models import Version
@@ -35,7 +35,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         return manager.create_user(*args, **kwargs)
 
 
-class AbstractVersionFactory(factory.DjangoModelFactory):
+class AbstractVersionFactory(factory.django.DjangoModelFactory):
     object_id = factory.SelfAttribute("content.id")
     content_type = factory.LazyAttribute(
         lambda o: ContentType.objects.get_for_model(o.content)
@@ -112,3 +112,13 @@ class PageContentWithVersionFactory(PageContentFactory):
             # Simple build, do nothing.
             return
         PageVersionFactory(content=self, **kwargs)
+
+
+class PageUrlFactory(factory.django.DjangoModelFactory):
+    slug = factory.Faker("slug")
+    path = ""
+    managed = False
+    language = "en"
+
+    class Meta:
+        model = PageUrl

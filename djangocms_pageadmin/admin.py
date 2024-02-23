@@ -1,17 +1,23 @@
-from django.conf.urls import url
+import csv
+import datetime
+
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Subquery
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+)
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.decorators import method_decorator
-from django.utils.html import force_text, format_html, format_html_join
-from django.utils.translation import override, ugettext_lazy as _
+from django.utils.html import format_html, format_html_join
+from django.utils.translation import get_language, gettext_lazy as _, override
 from django.views.decorators.http import require_POST
 
 from cms import api
@@ -21,16 +27,27 @@ from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
-from djangocms_version_locking.models import VersionLock
 from djangocms_version_locking.helpers import version_is_locked
+from djangocms_version_locking.models import VersionLock
 from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
-from .filters import LanguageFilter, TemplateFilter, UnpublishedFilter
+from .filters import (
+    AuthorFilter,
+    LanguageFilter,
+    TemplateFilter,
+    UnpublishedFilter,
+)
 from .forms import DuplicateForm
-from .helpers import proxy_model
+from .helpers import is_moderation_enabled, proxy_model
+
+
+try:
+    from django.utils.html import force_str
+except ImportError:
+    from django.utils.encoding import force_str
 
 
 require_POST = method_decorator(require_POST)
@@ -39,7 +56,7 @@ require_POST = method_decorator(require_POST)
 class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     change_list_template = "admin/djangocms_pageadmin/pagecontent/change_list.html"
     list_display_links = None
-    list_filter = (LanguageFilter, UnpublishedFilter, TemplateFilter)
+    list_filter = (LanguageFilter, UnpublishedFilter, TemplateFilter, AuthorFilter)
     _list_display = [
         "get_title",
         "url",
@@ -87,6 +104,60 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             )
         )
 
+    def get_actions(self, request):
+        """
+        If djangocms-moderation is enabled, adds admin action to allow multiple pages to be added to a moderation
+        collection.
+
+        :param request: Request object
+        :returns: dict of admin actions
+        """
+        actions = super().get_actions(request)
+        if not is_moderation_enabled():
+            return actions
+
+        from djangocms_moderation.admin_actions import \
+            add_items_to_collection  # noqa
+
+        actions["add_items_to_collection"] = (
+            add_items_to_collection,
+            "add_items_to_collection",
+            add_items_to_collection.short_description
+        )
+        return actions
+
+    def get_search_results(self, request, queryset, search_term):
+        """
+        Override the ModelAdmin method for fetching search results to filter for urls associated with the pagecontent
+        :param request: PageContent Admin request
+        :param queryset: PageContent queryset
+        :param search_term: Term to be searched for
+        :return: results
+        """
+        language = get_language()
+        returned_queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        """
+        While the returned_queryset contains searches for title, without filtering on the original, we are unable to
+        search for symbols within the URL, such as '-'. Therefore, filter the original queryset and combine.
+        Language must also be filtered in order to prevent hits on PageContent which have URLS in multiple languages.
+        """
+        returned_queryset |= queryset.filter(
+            Q(page__urls__slug__icontains=search_term) | Q(page__urls__path__icontains=search_term),
+            page__urls__language=language
+        )
+
+        """
+        This is a workaround to avoid replicating the functionality of get_search_results in Django, which checks
+        whether a queryset is distinct based on search_fields. We cannot use the standard search_fields configuration,
+        because this would not be language aware, and would results in hits on URLs in languages different to the users.
+        As we are looking across reverse FK relations, we know that this method should always return use_distinct=True,
+        therefore if a search has been made, set it as such.
+        https://github.com/django/django/blob/2a62cdcfec85938f40abb2e9e6a9ff497e02afe8/django/contrib/admin/options.py#L980 # NOQA
+        """
+        if search_term:
+            use_distinct = True
+        return returned_queryset, use_distinct
+
     def get_version(self, obj):
         return obj.versions.all()[0]
 
@@ -96,7 +167,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     state.short_description = _("state")
 
-    def url(self, obj):
+    def url(self, obj, csv=False):
         path = obj._path
         url = None
         with override(obj.language):
@@ -104,8 +175,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 url = reverse("pages-root")
             if path:
                 url = reverse("pages-details-by-slug", kwargs={"slug": path})
-        if url is not None:
-            return format_html('<a href="{url}">{url}</a>', url=url)
+        if url is not None and csv is False:
+            return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
+        return url
 
     url.short_description = _("url")
 
@@ -148,6 +220,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         return [
             self._set_home_link,
             self._get_preview_link,
+            # CAVEAT : get_edit_link Commented out to hide edit link from change list
+            # Edit page content can be accessed from preview
+            # Below line should be uncommented  change is added to open the edit link new tab
             self._get_edit_link,
             self._get_duplicate_link,
             self._get_unpublish_link,
@@ -159,7 +234,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def _get_preview_link(self, obj, request, disabled=False):
         return render_to_string(
             "djangocms_pageadmin/admin/icons/preview.html",
-            {"url": get_object_preview_url(obj), "disabled": disabled},
+            {"url": get_object_preview_url(obj), "disabled": disabled, "keepsideframe": False},
         )
 
     def _get_edit_link(self, obj, request, disabled=False):
@@ -186,7 +261,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def _get_duplicate_link(self, obj, request, disabled=False):
         url = reverse(
-            "admin:{app}_{model}_duplicate_content".format(
+            "admin:{app}_{model}_duplicate".format(
                 app=self.model._meta.app_label, model=self.model._meta.model_name
             ),
             args=(obj.pk,),
@@ -279,8 +354,17 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def changelist_view(self, request, extra_context=None):
         """Ignore default cms' implementation and use ModelAdmin instead.
         """
+        # The standard Pages menu for the PageContent model as provided by the CMS returns a selected item.
+        # This works because that view has no filters. PageAdmin has filters, so this causes unwanted filtering.
+        # We remove the page_id before calling onto the changelist view. We may in future want to use the parameter
+        # so we remove it before initiating the standard Django changelist view.
+        if 'page_id' in request.GET:
+            request.GET = request.GET.copy()
+            del (request.GET['page_id'])
+
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
 
+    @transaction.atomic
     def duplicate_view(self, request, object_id):
         """Duplicate a specified PageContent.
 
@@ -332,7 +416,10 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
                 placeholders = obj.get_placeholders()
                 for source_placeholder in placeholders:
-                    target_placeholder = new_page_content.placeholders.get(
+                    # Keep all placeholders even if they are not in the template anymore to ensure the data is kept,
+                    # keeping only placeholders from rescanning the template would not keep any legacy content
+                    # which could in theory be remapped repaired at a later date
+                    target_placeholder, created = new_page_content.placeholders.get_or_create(
                         slot=source_placeholder.slot
                     )
                     source_placeholder.copy_plugins(
@@ -347,7 +434,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             form=form,
             object_id=object_id,
             duplicate_url=reverse(
-                "admin:{}_{}_duplicate_content".format(*info), args=(obj.pk,)
+                "admin:{}_{}_duplicate".format(*info), args=(obj.pk,)
             ),
             back_url=reverse("admin:{}_{}_changelist".format(*info)),
         )
@@ -369,7 +456,7 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
         if not page.is_potential_home():
             return HttpResponseBadRequest(
-                force_text(_("The page is not eligible to be home."))
+                force_str(_("The page is not eligible to be home."))
             )
 
         new_home_tree, old_home_tree = page.set_as_homepage(request.user)
@@ -394,18 +481,101 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
-        return [
-            url(
+        # we replace the duplicate with our function.
+        old_urls = [v for v in super().get_urls() if 'duplicate' not in str(v.name)]
+        new_urls = [
+            re_path(
                 r"^(.+)/duplicate-content/$",
                 self.admin_site.admin_view(self.duplicate_view),
-                name="{}_{}_duplicate_content".format(*info),
+                name="{}_{}_duplicate".format(*info),
             ),
-            url(
+            re_path(
                 r"^(.+)/set-home-content/$",
                 self.admin_site.admin_view(self.set_home_view),
                 name="{}_{}_set_home_content".format(*info),
             ),
-        ] + super().get_urls()
+            re_path(
+                r'^export_csv/$',
+                self.admin_site.admin_view(self.export_to_csv),
+                name="{}_{}_export_csv".format(*info),
+            ),
+        ]
+        return new_urls + old_urls
+
+    def _format_export_datetime(self, date):
+        """
+        date: DateTime object
+        date_format: String, date time string format for strftime
+
+        Returns a formatted human readable date time string
+        """
+        if isinstance(date, datetime.date):
+            return date.strftime("%Y/%m/%d %H:%M %z")
+        return ""
+
+    def export_to_csv(self, request):
+        """
+        Retrieves the queryset and exports to csv format
+        """
+        queryset = self.get_exported_queryset(request)
+        meta = self.model._meta
+        field_names = ['Title', 'Expiry Date', 'Version State', 'Version Author', 'Url',
+                       'Compliance Number']
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+        writer = csv.writer(response)
+        writer.writerow(field_names)
+        for obj in queryset:
+            title = obj.title
+            expiry_date = self._format_export_datetime(self.get_expiry_date(obj))
+            version_state = self.state(obj)
+            version_author = self.author(obj)
+            url = self.url(obj, True)
+            compliance_number = self.get_compliance_number(obj)
+            writer.writerow([title, expiry_date, version_state, version_author, url, compliance_number])
+
+        return response
+
+    def get_expiry_date(self, obj):
+        version = self.get_version(obj)
+        if hasattr(version, "contentexpiry"):
+            return version.contentexpiry.expires
+        return ""
+
+    def get_compliance_number(self, obj):
+        version = self.get_version(obj)
+        if hasattr(version, "contentexpiry"):
+            return version.contentexpiry.compliance_number
+        return ""
+
+    def get_exported_queryset(self, request):
+        """
+        Returns export queryset by respecting applied filters.
+        """
+        list_display = self.get_list_display(request)
+        list_display_links = self.get_list_display_links(request, list_display)
+        list_filter = self.get_list_filter(request)
+        search_fields = self.get_search_fields(request)
+        changelist = self.get_changelist(request)
+
+        changelist_kwargs = {
+            'request': request,
+            'model': self.model,
+            'list_display': list_display,
+            'list_display_links': list_display_links,
+            'list_filter': list_filter,
+            'date_hierarchy': self.date_hierarchy,
+            'search_fields': search_fields,
+            'list_select_related': self.list_select_related,
+            'list_per_page': self.list_per_page,
+            'list_max_show_all': self.list_max_show_all,
+            'list_editable': self.list_editable,
+            'model_admin': self,
+            'sortable_by': self.sortable_by
+        }
+        cl = changelist(**changelist_kwargs)
+
+        return cl.get_queryset(request)
 
     class Media:
         css = {"all": ("djangocms_pageadmin/css/actions.css",)}
