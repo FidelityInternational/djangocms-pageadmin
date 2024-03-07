@@ -14,6 +14,7 @@ from django.http import (
 )
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.urls import path
 from django.urls import re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
@@ -27,13 +28,14 @@ from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
-from djangocms_version_locking.helpers import version_is_locked
+from djangocms_versioning.helpers import version_is_locked
 from djangocms_version_locking.models import VersionLock
 from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
+from .compat import DJANGO_CMS_4_1
 from .filters import (
     AuthorFilter,
     LanguageFilter,
@@ -161,12 +163,17 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def get_version(self, obj):
         return obj.versions.all()[0]
 
+    @admin.display(
+        description=_("state")
+    )
     def state(self, obj):
         version = self.get_version(obj)
         return version.get_state_display()
 
-    state.short_description = _("state")
 
+    @admin.action(
+        description=_("url")
+    )
     def url(self, obj, csv=False):
         path = obj._path
         url = None
@@ -179,8 +186,10 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
         return url
 
-    url.short_description = _("url")
 
+    @admin.display(
+        description=_("title")
+    )
     def get_title(self, obj):
         return format_html(
             "{home}{lock}{title}",
@@ -189,14 +198,15 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             title=obj.title,
         )
 
-    get_title.short_description = _("title")
 
+    @admin.display(
+        description=_("author"),
+        ordering="versions__created_by",
+    )
     def author(self, obj):
         version = self.get_version(obj)
         return version.created_by
 
-    author.short_description = _("author")
-    author.admin_order_field = "versions__created_by"
 
     def is_locked(self, obj):
         version = self.get_version(obj)
@@ -209,12 +219,14 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return render_to_string("djangocms_pageadmin/admin/icons/home.html")
         return ""
 
+    @admin.display(
+        description=_("modified date"),
+        ordering="versions__modified",
+    )
     def modified_date(self, obj):
         version = self.get_version(obj)
         return version.modified
 
-    modified_date.short_description = _("modified date")
-    modified_date.admin_order_field = "versions__modified"
 
     def get_list_actions(self):
         return [
@@ -399,16 +411,28 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                     extensions=False,
                 )
 
-                new_page_content = api.create_title(
-                    page=new_page,
-                    language=obj.language,
-                    slug=form.cleaned_data["slug"],
-                    path=form.cleaned_data["path"],
-                    title=obj.title,
-                    template=obj.template,
-                    created_by=request.user,
-                )
-                new_page.title_cache[obj.language] = new_page_content
+                if not DJANGO_CMS_4_1:
+                    new_page_content = api.create_title(
+                        page=new_page,
+                        language=obj.language,
+                        slug=form.cleaned_data["slug"],
+                        path=form.cleaned_data["path"],
+                        title=obj.title,
+                        template=obj.template,
+                        created_by=request.user,
+                    )
+                    new_page.title_cache[obj.language] = new_page_content
+                else:
+                    new_page_content = api.create_page_content(
+                        page=new_page,
+                        language=obj.language,
+                        slug=form.cleaned_data["slug"],
+                        path=form.cleaned_data["path"],
+                        title=obj.title,
+                        template=obj.template,
+                        created_by=request.user,
+                    )
+                    new_page.page_content_cache[obj.language] = new_page_content
 
                 extension_pool.copy_extensions(
                     source_page=obj.page, target_page=new_page, languages=[obj.language]
@@ -494,8 +518,8 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 self.admin_site.admin_view(self.set_home_view),
                 name="{}_{}_set_home_content".format(*info),
             ),
-            re_path(
-                r'^export_csv/$',
+            path(
+                'export_csv/',
                 self.admin_site.admin_view(self.export_to_csv),
                 name="{}_{}_export_csv".format(*info),
             ),

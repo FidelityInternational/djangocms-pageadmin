@@ -389,19 +389,10 @@ class DuplicateViewTestCase(CMSTestCase):
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(mock.call_args[0][1], 30)  # warning level
 
-        # Django < 3 support
-        # django 3 contains text formatting changes
-        if not DJANGO_GTE_30:
-            self.assertEqual(
-                mock.call_args[0][2],
-                'page content with ID "foo" doesn\'t exist. Perhaps it was deleted?',
-            )
-        # django >= 3 support
-        else:
-            self.assertEqual(
-                mock.call_args[0][2],
-                'page content with ID “foo” doesn’t exist. Perhaps it was deleted?',
-            )
+        self.assertEqual(
+            mock.call_args[0][2],
+            'page content with ID “foo” doesn’t exist. Perhaps it was deleted?',
+        )
 
     def test_get(self):
         pagecontent = PageContentWithVersionFactory()

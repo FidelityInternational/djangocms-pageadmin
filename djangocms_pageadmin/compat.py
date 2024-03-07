@@ -1,6 +1,6 @@
-from distutils.version import LooseVersion
+from cms import __version__ as cms_version
 
-import django
+from packaging.version import Version
 
 
-DJANGO_GTE_30 = LooseVersion(django.get_version()) >= LooseVersion("3.0")
+DJANGO_CMS_4_1 = Version(cms_version) >= Version('4.1')
