@@ -1,6 +1,6 @@
-from distutils.version import LooseVersion
-
 import django
 
+from packaging.version import Version
 
-DJANGO_GTE_30 = LooseVersion(django.get_version()) >= LooseVersion("3.0")
+
+DJANGO_4_2 = Version(django.get_version()) >= Version('4.2')

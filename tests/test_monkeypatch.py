@@ -69,7 +69,7 @@ class VersioningIntegrationTestCase(CMSTestCase):
             response = self.client.get(url, follow=True)
 
         self.assertIn("cl", response.context)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context["cl"].queryset,
             [version.pk],
             transform=lambda x: x.pk,

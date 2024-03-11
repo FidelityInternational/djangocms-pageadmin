@@ -159,7 +159,7 @@ class AuthorFilterTestCase(CMSTestCase):
 
         # The results should not be filtered
         self.assertTrue(len(queryset_result), 2)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context["cl"].queryset,
             [page_author_1.pk, page_author_2.pk],
             transform=lambda x: x.pk,
@@ -173,7 +173,7 @@ class AuthorFilterTestCase(CMSTestCase):
 
         # When an author is selected in the filter only the author selected pages are shown
         self.assertTrue(len(queryset_result), 1)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context["cl"].queryset,
             [page_author_1.pk],
             transform=lambda x: x.pk,

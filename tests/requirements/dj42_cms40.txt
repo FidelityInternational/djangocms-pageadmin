@@ -1,0 +1,18 @@
+-r ./requirements_base.txt
+
+Django>=4.2,<5.0
+# django-classy-tags<=4.1.0
+django-sekizai<=4.1.0
+
+# Unreleased django 4.2 compatible packages
+https://github.com/django-cms/django-cms/tarball/release/4.0.1.x#egg=django-cms
+https://github.com/joshyu/djangocms-versioning/tarball/feat/django-42-compatible#egg=djangocms-versioning
+https://github.com/joshyu/djangocms-alias/tarball/feat/django-42-compatible#egg=djangocms-alias
+https://github.com/django-cms/djangocms-text-ckeditor/tarball/support/4.0.x#egg=djangocms-text-ckeditor
+# https://github.com/FidelityInternational/djangocms-version-locking/tarball/master#egg=djangocms-version-locking
+https://github.com/joshyu/djangocms-version-locking/tarball/feat/django-42-compatible#egg=djangocms-version-locking
+https://github.com/FidelityInternational/djangocms-moderation/tarball/feature/django-42-compat#egg=djangocms-moderation
+
+
+
+

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from cms.utils import get_current_site
@@ -122,7 +122,7 @@ class AuthorFilter(admin.SimpleListFilter):
 
         for user in users:
             options.append(
-                (force_text(user.pk), user.get_full_name() or user.get_username())
+                (force_str(user.pk), user.get_full_name() or user.get_username())
             )
         return options
 

@@ -14,7 +14,7 @@ from django.http import (
 )
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import re_path, reverse
+from django.urls import path, re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
 from django.utils.translation import get_language, gettext_lazy as _, override
@@ -34,6 +34,7 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
+from .compat import DJANGO_4_2
 from .filters import (
     AuthorFilter,
     LanguageFilter,
@@ -161,12 +162,16 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def get_version(self, obj):
         return obj.versions.all()[0]
 
+    @admin.display(
+        description=_("state")
+    )
     def state(self, obj):
         version = self.get_version(obj)
         return version.get_state_display()
 
-    state.short_description = _("state")
-
+    @admin.action(
+        description=_("url")
+    )
     def url(self, obj, csv=False):
         path = obj._path
         url = None
@@ -179,8 +184,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
         return url
 
-    url.short_description = _("url")
-
+    @admin.display(
+        description=_("title")
+    )
     def get_title(self, obj):
         return format_html(
             "{home}{lock}{title}",
@@ -189,14 +195,13 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             title=obj.title,
         )
 
-    get_title.short_description = _("title")
-
+    @admin.display(
+        description=_("author"),
+        ordering="versions__created_by",
+    )
     def author(self, obj):
         version = self.get_version(obj)
         return version.created_by
-
-    author.short_description = _("author")
-    author.admin_order_field = "versions__created_by"
 
     def is_locked(self, obj):
         version = self.get_version(obj)
@@ -209,12 +214,13 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return render_to_string("djangocms_pageadmin/admin/icons/home.html")
         return ""
 
+    @admin.display(
+        description=_("modified date"),
+        ordering="versions__modified",
+    )
     def modified_date(self, obj):
         version = self.get_version(obj)
         return version.modified
-
-    modified_date.short_description = _("modified date")
-    modified_date.admin_order_field = "versions__modified"
 
     def get_list_actions(self):
         return [
@@ -494,8 +500,8 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                 self.admin_site.admin_view(self.set_home_view),
                 name="{}_{}_set_home_content".format(*info),
             ),
-            re_path(
-                r'^export_csv/$',
+            path(
+                'export_csv/',
                 self.admin_site.admin_view(self.export_to_csv),
                 name="{}_{}_export_csv".format(*info),
             ),
@@ -573,6 +579,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             'model_admin': self,
             'sortable_by': self.sortable_by
         }
+
+        if DJANGO_4_2:
+            changelist_kwargs.update({'search_help_text': self.search_help_text})
         cl = changelist(**changelist_kwargs)
 
         return cl.get_queryset(request)
