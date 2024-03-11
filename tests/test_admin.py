@@ -24,7 +24,6 @@ from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
 from djangocms_pageadmin.admin import PageContentAdmin
-from djangocms_pageadmin.compat import DJANGO_GTE_30
 from djangocms_pageadmin.test_utils.factories import (
     PageContentWithVersionFactory,
     PageUrlFactory,

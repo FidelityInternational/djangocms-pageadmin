@@ -1,6 +1,5 @@
-from cms import __version__ as cms_version
-
+import django
 from packaging.version import Version
 
 
-DJANGO_CMS_4_1 = Version(cms_version) >= Version('4.1')
+DJANGO_4_2 = Version(django.get_version()) >= Version('4.2')

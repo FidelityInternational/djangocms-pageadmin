@@ -28,14 +28,14 @@ from cms.models import PageContent, PageUrl
 from cms.signals.apphook import set_restart_trigger
 from cms.toolbar.utils import get_object_preview_url
 
-from djangocms_versioning.helpers import version_is_locked
+from djangocms_version_locking.helpers import version_is_locked
 from djangocms_version_locking.models import VersionLock
 from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import version_list_url
 from djangocms_versioning.models import Version
 
-from .compat import DJANGO_CMS_4_1
+from .compat import DJANGO_4_2
 from .filters import (
     AuthorFilter,
     LanguageFilter,
@@ -170,7 +170,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
         version = self.get_version(obj)
         return version.get_state_display()
 
-
     @admin.action(
         description=_("url")
     )
@@ -186,7 +185,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             return format_html('<a class="js-page-admin-close-sideframe" href="{url}">{url}</a>', url=url)
         return url
 
-
     @admin.display(
         description=_("title")
     )
@@ -198,7 +196,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             title=obj.title,
         )
 
-
     @admin.display(
         description=_("author"),
         ordering="versions__created_by",
@@ -206,7 +203,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def author(self, obj):
         version = self.get_version(obj)
         return version.created_by
-
 
     def is_locked(self, obj):
         version = self.get_version(obj)
@@ -226,7 +222,6 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
     def modified_date(self, obj):
         version = self.get_version(obj)
         return version.modified
-
 
     def get_list_actions(self):
         return [
@@ -411,28 +406,16 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
                     extensions=False,
                 )
 
-                if not DJANGO_CMS_4_1:
-                    new_page_content = api.create_title(
-                        page=new_page,
-                        language=obj.language,
-                        slug=form.cleaned_data["slug"],
-                        path=form.cleaned_data["path"],
-                        title=obj.title,
-                        template=obj.template,
-                        created_by=request.user,
-                    )
-                    new_page.title_cache[obj.language] = new_page_content
-                else:
-                    new_page_content = api.create_page_content(
-                        page=new_page,
-                        language=obj.language,
-                        slug=form.cleaned_data["slug"],
-                        path=form.cleaned_data["path"],
-                        title=obj.title,
-                        template=obj.template,
-                        created_by=request.user,
-                    )
-                    new_page.page_content_cache[obj.language] = new_page_content
+                new_page_content = api.create_title(
+                    page=new_page,
+                    language=obj.language,
+                    slug=form.cleaned_data["slug"],
+                    path=form.cleaned_data["path"],
+                    title=obj.title,
+                    template=obj.template,
+                    created_by=request.user,
+                )
+                new_page.title_cache[obj.language] = new_page_content
 
                 extension_pool.copy_extensions(
                     source_page=obj.page, target_page=new_page, languages=[obj.language]
@@ -597,6 +580,9 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             'model_admin': self,
             'sortable_by': self.sortable_by
         }
+
+        if DJANGO_4_2:
+            changelist_kwargs.update({'search_help_text': self.search_help_text})
         cl = changelist(**changelist_kwargs)
 
         return cl.get_queryset(request)
