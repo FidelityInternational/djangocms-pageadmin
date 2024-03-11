@@ -14,8 +14,7 @@ from django.http import (
 )
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import path
-from django.urls import re_path, reverse
+from django.urls import path, re_path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, format_html_join
 from django.utils.translation import get_language, gettext_lazy as _, override
