@@ -2,11 +2,13 @@
 Changelog
 =========
 
-Unreleased
-==========
-* Python 3.10 support added
-* Python 3.7 support removed
-* Django 4.2 support added
+
+1.7.0 (Unreleased)
+==================
+* Introduced Django 4.2 support.
+* Dropped support for Django<3.1
+* Added support for Python 3.10
+* Dropped support for Python<3.8
 
 1.6.0 (2022-11-04)
 ==================
