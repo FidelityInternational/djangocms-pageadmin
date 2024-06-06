@@ -2,6 +2,9 @@
 Changelog
 =========
 
+Unreleased
+=================
+* Fixed edit link in pageadmin to close sideframe
 
 1.7.0 (2024-05-16)
 ==================

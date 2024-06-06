@@ -260,9 +260,10 @@ class PageContentAdmin(VersioningAdminMixin, DefaultPageContentAdmin):
             args=(version.pk,),
         )
 
+        # close sideframe as edit will always be on page and not in sideframe
         return render_to_string(
             "djangocms_pageadmin/admin/icons/edit.html",
-            {"url": url, "disabled": disabled, "get": False},
+            {"url": url, "disabled": disabled, "get": False, "keepsideframe": False},
         )
 
     def _get_duplicate_link(self, obj, request, disabled=False):
